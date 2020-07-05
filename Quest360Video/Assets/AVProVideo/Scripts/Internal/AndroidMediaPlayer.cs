@@ -15,7 +15,7 @@ using System;
 using System.Runtime.InteropServices;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -32,8 +32,9 @@ namespace RenderHeads.Media.AVProVideo
 
 		private static string				s_Version = "Plug-in not yet initialised";
 
+#if AVPROVIDEO_ISSUEPLUGINEVENT_UNITY52
 		private static System.IntPtr 		_nativeFunction_RenderEvent = System.IntPtr.Zero;
-
+#endif
 		protected AndroidJavaObject			m_Video;
 		private Texture2D					m_Texture;
         private int                         m_TextureHandle;
@@ -73,6 +74,14 @@ namespace RenderHeads.Media.AVProVideo
 #endif
 		public static bool InitialisePlatform()
 		{
+#if UNITY_5_4_OR_NEWER
+			if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Vulkan)
+			{
+				Debug.LogError("[AVProVideo] Vulkan graphics API is not supported");
+				return false;
+			}
+#endif
+
 			// Get the activity context
 			if (s_ActivityContext == null)
             {
@@ -93,7 +102,11 @@ namespace RenderHeads.Media.AVProVideo
 
 					// Calling this native function cause the .SO library to become loaded
 					// This is important for Unity < 5.2.0 where GL.IssuePluginEvent works differently
+					#if AVPROVIDEO_ISSUEPLUGINEVENT_UNITY52
 					_nativeFunction_RenderEvent = Native.GetRenderEventFunc();
+					#else
+					Native.GetRenderEventFunc();
+					#endif
 
 					s_bInitialised = true;
 				}
@@ -206,6 +219,9 @@ namespace RenderHeads.Media.AVProVideo
 			m_UseFastOesPath = useFastOesPath;
 			if (m_Video != null)
 			{
+				// Show poster frame is only needed when using the MediaPlayer API
+				showPosterFrame = (m_API == Android.VideoApi.MediaPlayer) ? showPosterFrame:false;
+
 				m_Video.Call("SetPlayerOptions", m_UseFastOesPath, showPosterFrame);
 			}
 		}
@@ -237,6 +253,10 @@ namespace RenderHeads.Media.AVProVideo
 #endif
 
 				bReturn = m_Video.Call<bool>("OpenVideoFromFile", path, offset, httpHeaderJson, forceFileFormat);
+				if (!bReturn)
+				{
+					DisplayLoadFailureSuggestion(path);
+				}
 			}
 			else
 			{
@@ -244,6 +264,14 @@ namespace RenderHeads.Media.AVProVideo
 			}
 
 			return bReturn;
+		}
+
+		private void DisplayLoadFailureSuggestion(string path)
+		{
+			if (path.ToLower().Contains("http://"))
+			{
+				Debug.LogError("Android 8 and above require HTTPS by default, change to HTTPS or enable ClearText in the AndroidManifest.xml");
+			}
 		}
 
 		public override TimeRange[] GetSeekableTimeRanges()
@@ -712,14 +740,17 @@ namespace RenderHeads.Media.AVProVideo
 		public override int GetTextureFrameCount()
 		{
 			int result = 0;
-#if DLL_METHODS
-			result = Native._GetFrameCount( m_iPlayerIndex );
-#else
-			if (m_Video != null)
+			if( m_Texture != null )
 			{
-				result = m_Video.Call<int>("GetFrameCount");
-			}
+#if DLL_METHODS
+				result = Native._GetFrameCount( m_iPlayerIndex );
+#else
+				if (m_Video != null)
+				{
+					result = m_Video.Call<int>("GetFrameCount");
+				}
 #endif
+			}
 			return result;
 		}
 
@@ -877,10 +908,10 @@ namespace RenderHeads.Media.AVProVideo
 		public override int GetCurrentVideoTrackBitrate()
 		{
 			int bitrate = 0;
-			/*if( m_Video != null )
+			if( m_Video != null )
 			{
 				bitrate = m_Video.Call<int>("GetCurrentVideoTrackBitrate");
-			}*/
+			}
 			return bitrate;
 		}
 
@@ -1094,7 +1125,7 @@ namespace RenderHeads.Media.AVProVideo
 					m_Video.Call("Update");
 				}
 				
-				//				_lastError = (ErrorCode)( m_Video.Call<int>("GetLastErrorCode") );
+//				_lastError = (ErrorCode)( m_Video.Call<int>("GetLastErrorCode") );
 				_lastError = (ErrorCode)( Native._GetLastErrorCode( m_iPlayerIndex) );
 			}
 

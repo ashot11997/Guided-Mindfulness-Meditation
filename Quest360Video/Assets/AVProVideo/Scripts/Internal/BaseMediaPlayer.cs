@@ -14,7 +14,7 @@ using Windows.Storage.Streams;
 #endif
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserved.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -263,7 +263,7 @@ namespace RenderHeads.Media.AVProVideo
 			{
 				float time = GetCurrentTimeMs();
 
-				// TODO: implement a more effecient subtitle index searcher
+				// TODO: implement a more efficient subtitle index searcher
 				int searchIndex = 0;
 				if (_currentSubtitle != null)
 				{

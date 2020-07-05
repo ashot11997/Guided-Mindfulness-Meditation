@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 using AOT;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -45,15 +45,17 @@ namespace RenderHeads.Media.AVProVideo
 			Linear
 		};
 
-		private enum AVPPlayerStatus
+		[Flags]
+		private enum AVPPlayerStatus : int
 		{
-			Failed = -1,
-			Unknown,
-			ReadyToPlay,
-			Playing,
-			Finished,
-			Seeking,
-			Buffering
+			Unknown     = 0,
+			ReadyToPlay = 1 <<  0,
+			Playing     = 1 <<  1,
+			Finished    = 1 <<  2,
+			Seeking     = 1 <<  3,
+			Buffering   = 1 <<  4,
+			Stalled     = 1 <<  5,
+			Failed      = 1 << 31,
 		}
 
 		private enum AVPLogFlag
@@ -112,6 +114,9 @@ namespace RenderHeads.Media.AVProVideo
 
 		[DllImport(PluginName)]
 		private static extern double AVPPlayerGetDuration(IntPtr player);
+
+		[DllImport(PluginName)]
+		private static extern void AVPPlayerGetNaturalSize(IntPtr player, out int width, out int height);
 
 		[DllImport(PluginName)]
 		private static extern int AVPPlayerGetFrameCount(IntPtr player);
@@ -276,6 +281,9 @@ namespace RenderHeads.Media.AVProVideo
 		private static extern void AVPlayerSetPlayWithoutBuffering(IntPtr player, bool playWithoutBuffering);
 
 		[DllImport(PluginName)]
+		private static extern void AVPPlayerSetResumePlaybackOnAudioSessionRouteChange(IntPtr player, bool resumePlaybackOnAudioSessionRouteChange);
+
+		[DllImport(PluginName)]
 		private static extern void AVPPluginRegister();
 
 		[DllImport(PluginName)]
@@ -283,6 +291,16 @@ namespace RenderHeads.Media.AVProVideo
 
 		[DllImport(PluginName)]
 		private static extern void AVPPluginSetDebugLogFunction(IntPtr fn);
+
+		// Audio capture support
+		[DllImport(PluginName)]
+		private static extern void AVPPlayerEnableAudioCapture(IntPtr player, int sampleRate, int channelCount);
+
+		[DllImport(PluginName)]
+		private static extern void AVPPlayerCopyAudio(IntPtr player, float[] buffer, int length);
+
+		[DllImport(PluginName)]
+		private static extern int  AVPPlayerGetAudioChannelCount(IntPtr player);
 
 		// MediaPlayer Interface
 
@@ -297,7 +315,7 @@ namespace RenderHeads.Media.AVProVideo
 #endif
 		private delegate void DebugLogCallbackDelegate(int level, int flags, string str);
 
-#if UNITY_IPHONE || UNITY_IOS || UNITY_TVOS
+#if UNITY_IPHONE || UNITY_IOS || UNITY_TVOS || ENABLE_IL2CPP
 		[MonoPInvokeCallback(typeof(DebugLogCallbackDelegate))]
 #endif
 		private static void DebugLogCallback(int level, int flags, string str)
@@ -334,7 +352,7 @@ namespace RenderHeads.Media.AVProVideo
 #endif
 		private delegate void ValueAtKeyPathDidChangeDelegate(IntPtr self, string keyPath);
 
-#if UNITY_IPHONE || UNITY_IOS || UNITY_TVOS
+#if UNITY_IPHONE || UNITY_IOS || UNITY_TVOS || ENABLE_IL2CPP
 		[MonoPInvokeCallback(typeof(ValueAtKeyPathDidChangeDelegate))]
 #endif
 		private static void ValueAtKeyPathDidChangeThunk(IntPtr self, string keyPath)
@@ -378,7 +396,6 @@ namespace RenderHeads.Media.AVProVideo
 #if ((UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX) && !UNITY_5) || (UNITY_IPHONE || UNITY_IOS || UNITY_TVOS)
 				AVPPluginRegister();
 #endif
-
 				DebugLogCallbackDelegate callbackDelegate = new DebugLogCallbackDelegate(DebugLogCallback);
 				IntPtr func = Marshal.GetFunctionPointerForDelegate(callbackDelegate);
 				AVPPluginSetDebugLogFunction(func);
@@ -389,7 +406,6 @@ namespace RenderHeads.Media.AVProVideo
 #if AVPROVIDEO_ISSUEPLUGINEVENT_UNITY52
 				_renderEventFunc = AVPGetRenderEventFunc();
 #endif
-
 				_matchURLRegex = new Regex("^[a-zA-Z][a-zA-Z0-9+-.]*://.*$");
 			}
 		}
@@ -413,7 +429,7 @@ namespace RenderHeads.Media.AVProVideo
 			Initialise();
 		}
 
-		public OSXMediaPlayer(bool useYpCbCr = false)
+		public OSXMediaPlayer(bool useYpCbCr = false, bool enableAudioCapture = false)
 		{
 			_useYpCbCr = useYpCbCr;
 			_player = AVPPlayerNew(useYpCbCr);
@@ -425,6 +441,9 @@ namespace RenderHeads.Media.AVProVideo
 			IntPtr self = GCHandle.ToIntPtr(_thisHandle);
 			IntPtr callback = Marshal.GetFunctionPointerForDelegate(callbackDelegate);
 			AVPPlayerAddValueDidChangeObserver(_player, self, callback, "seekableTimeRanges", 0);
+
+			if (enableAudioCapture)
+				EnableAudioCapture();
 		}
 
 		// Convenience method for calling OSXMediaPlayer.IssuePluginEvent.
@@ -476,7 +495,8 @@ namespace RenderHeads.Media.AVProVideo
 			_isMetaDataReady = false;
 			_planeCount = 0;
 			_YpCbCrTransformIsValid = false;
-			
+			_status = AVPPlayerStatus.Unknown;
+
 			base.CloseVideo();
 		}
 
@@ -507,7 +527,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override bool CanPlay()
 		{
-			return _status >= AVPPlayerStatus.ReadyToPlay;
+			return (_status & AVPPlayerStatus.ReadyToPlay) == AVPPlayerStatus.ReadyToPlay;
 		}
 
 		public override void Play()
@@ -582,27 +602,27 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override bool IsSeeking()
 		{
-			return _status == AVPPlayerStatus.Seeking;
+			return (_status & AVPPlayerStatus.Seeking) == AVPPlayerStatus.Seeking;
 		}
 
 		public override bool IsPlaying()
 		{
-			return _status == AVPPlayerStatus.Playing;
+			return (_status & AVPPlayerStatus.Playing) == AVPPlayerStatus.Playing;
 		}
 
 		public override bool IsPaused()
 		{
-			return _status == AVPPlayerStatus.ReadyToPlay;
+			return ((_status & AVPPlayerStatus.ReadyToPlay) == AVPPlayerStatus.ReadyToPlay) && ((_status & AVPPlayerStatus.Playing) == 0);
 		}
 
 		public override bool IsFinished()
 		{
-			return _status == AVPPlayerStatus.Finished;
+			return (_status & AVPPlayerStatus.Finished) == AVPPlayerStatus.Finished;
 		}
 
 		public override bool IsBuffering()
 		{
-			return _status == AVPPlayerStatus.Buffering;
+			return (_status & AVPPlayerStatus.Buffering) == AVPPlayerStatus.Buffering;
 		}
 
 		public override float GetBufferingProgress()
@@ -632,7 +652,15 @@ namespace RenderHeads.Media.AVProVideo
 				{
 					if (_texture[i] == null || _texture[i].width != textures[i].width || _texture[i].height != textures[i].height || _texture[i].format != (TextureFormat)textures[i].format)
 					{
-						_texture[i] = Texture2D.CreateExternalTexture(textures[i].width, textures[i].height, (TextureFormat)textures[i].format, /*mipmap*/ false, /*linear*/ false, textures[i].native);
+						int format = textures[i].format;
+#if !UNITY_5_6_OR_NEWER
+						// Older Unitys do not support R8 or RG16 texture formats so patch them through to Alpha8 and ARGB4444 respectively.
+						if (format == 63)
+							format = 1;
+						else if (format == 62)
+							format = 2;
+#endif
+						_texture[i] = Texture2D.CreateExternalTexture(textures[i].width, textures[i].height, (TextureFormat)format, /*mipmap*/ false, /*linear*/ false, textures[i].native);
 						if (i == 0)
 						{
 							_width = textures[i].width;
@@ -704,7 +732,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override bool IsPlaybackStalled()
 		{
-			return false;
+			return (_status & AVPPlayerStatus.Stalled) == AVPPlayerStatus.Stalled;
 		}
 
 		public override bool PlayerSupportsLinearColorSpace()
@@ -844,15 +872,23 @@ namespace RenderHeads.Media.AVProVideo
 							_texture[i].UpdateExternalTexture(IntPtr.Zero);
 							_texture[i] = null;
 						}
-						
-						_texture[i] = Texture2D.CreateExternalTexture(textures[i].width, textures[i].height, (TextureFormat)textures[i].format, /*mipmap*/ false, /*linear*/ false, textures[i].native);
+
+						int format = textures[i].format;
+#if !UNITY_5_6_OR_NEWER
+						// Older Unitys do not support R8 or RG16 texture formats so patch them through to Alpha8 and ARGB4444 respectively.
+						if (format == 63)
+							format = 1;
+						else if (format == 62)
+							format = 2;
+#endif
+						_texture[i] = Texture2D.CreateExternalTexture(textures[i].width, textures[i].height, (TextureFormat)format, /*mipmap*/ false, /*linear*/ false, textures[i].native);
 						if (i == 0)
 						{
 							_width = textures[i].width;
 							_height = textures[i].height;
 							_flipped = textures[i].flipped != 0;
 						}
-						
+
 						if (_texture[i] != null)
 						{
 							ApplyTextureProperties(_texture[i]);
@@ -908,7 +944,12 @@ namespace RenderHeads.Media.AVProVideo
 							}
 						}
 						_playerDescription = "AVFoundation";
-						Helper.LogInfo("Using playback path: " + _playerDescription + " (" + _width + "x" + _height + "@" + GetVideoFrameRate().ToString("F2") + ")");
+
+						int width = 0;
+						int height = 0;
+						AVPPlayerGetNaturalSize(_player, out width, out height);
+
+						Helper.LogInfo("Using playback path: " + _playerDescription + " (" + width + "x" + height + "@" + GetVideoFrameRate().ToString("F2") + ")");
 					}
 					else if (HasAudio())
 					{
@@ -926,6 +967,54 @@ namespace RenderHeads.Media.AVProVideo
 			_thisHandle.Free();
 		}
 
+		public void SetResumePlaybackOnAudioSessionRouteChange(bool resumePlaybackOnAudioSessionRouteChange)
+		{
+			AVPPlayerSetResumePlaybackOnAudioSessionRouteChange(_player, resumePlaybackOnAudioSessionRouteChange);
+		}
+
+		public void EnableAudioCapture()
+		{
+			int channelCount = 0;
+			switch (AudioSettings.speakerMode)
+			{
+#if !UNITY_2019_2_OR_NEWER
+				case AudioSpeakerMode.Raw:
+					break;
+#endif
+				case AudioSpeakerMode.Mono:
+					channelCount = 1;
+					break;
+				case AudioSpeakerMode.Stereo:
+					channelCount = 2;
+					break;
+				case AudioSpeakerMode.Quad:
+					channelCount = 4;
+					break;
+				case AudioSpeakerMode.Surround:
+					channelCount = 5;
+					break;
+				case AudioSpeakerMode.Mode5point1:
+					channelCount = 6;
+					break;
+				case AudioSpeakerMode.Mode7point1:
+					channelCount = 8;
+					break;
+				case AudioSpeakerMode.Prologic:
+					channelCount = 2;
+					break;
+			}
+			AVPPlayerEnableAudioCapture(_player, AudioSettings.outputSampleRate, channelCount);
+		}
+
+		public override void GrabAudio(float[] buffer, int length, int channelCount)
+		{
+			AVPPlayerCopyAudio(_player, buffer, length);
+		}
+
+		public override int GetNumAudioChannels()
+		{
+			return AVPPlayerGetAudioChannelCount(_player);
+		}
 	}
 }
 

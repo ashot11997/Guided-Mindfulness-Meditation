@@ -5,7 +5,7 @@
 using UnityEngine;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -17,7 +17,7 @@ namespace RenderHeads.Media.AVProVideo
 	/// </summary>
 	[AddComponentMenu("AVPro Video/Update Stereo Material", 400)]
 #if UNITY_HELPATTRIB
-	[HelpURL("http://renderheads.com/product/avpro-video/")]
+	[HelpURL("http://renderheads.com/products/avpro-video/")]
 #endif
 	public class UpdateStereoMaterial : MonoBehaviour
 	{

@@ -8,7 +8,7 @@
 		#define AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
 	#endif
 #endif
-#if UNITY_WP_8_1 || UNITY_WSA || UNITY_WSA_8_1 || UNITY_WSA_10
+#if UNITY_WP_8_1 || UNITY_WSA || UNITY_WSA_8_1 || UNITY_WSA_10 || ENABLE_IL2CPP
 	#define AVPROVIDEO_MARSHAL_RETURN_BOOL
 #endif
 
@@ -22,7 +22,7 @@ using Windows.Storage.Streams;
 #endif
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -610,7 +610,12 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override bool IsPlaybackStalled()
 		{
-			return Native.IsPlaybackStalled(_instance);
+			bool result = Native.IsPlaybackStalled(_instance);
+			if (!result)
+			{
+				result = base.IsPlaybackStalled();
+			}
+			return result;
 		}
 
 		public override string GetCurrentAudioTrackId()
@@ -804,7 +809,7 @@ namespace RenderHeads.Media.AVProVideo
 #if UNITY_WSA
 			// NOTE: I think this issue has been resolved now as of version 1.5.24.  
 			// The issue was caused by functions returning booleans incorrectly (4 bytes vs 1)
-			// and as been resolved by specificying the return type during marshalling..
+			// and as been resolved by specifying the return type during marshalling..
 			// Still we'll keep this code here until after more testing.
 
 			// WSA has an issue where it can load the audio track first and the video track later
@@ -874,7 +879,8 @@ namespace RenderHeads.Media.AVProVideo
 				if (_texture == null && _width > 0 && _height > 0 && newPtr != System.IntPtr.Zero)
 				{
 					_isTextureTopDown = Native.IsTextureTopDown(_instance);
-					_texture = Texture2D.CreateExternalTexture(_width, _height, TextureFormat.RGBA32, _useTextureMips, false, newPtr);
+					bool isLinear = (!_supportsLinearColorSpace && QualitySettings.activeColorSpace == ColorSpace.Linear);
+					_texture = Texture2D.CreateExternalTexture(_width, _height, TextureFormat.RGBA32, _useTextureMips, isLinear, newPtr);
 					if (_texture != null)
 					{
 						_texture.name = "AVProVideo";

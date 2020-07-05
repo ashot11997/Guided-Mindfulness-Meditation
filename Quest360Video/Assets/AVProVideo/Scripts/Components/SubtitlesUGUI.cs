@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -16,7 +16,7 @@ namespace RenderHeads.Media.AVProVideo
 	/// </summary>
 	[AddComponentMenu("AVPro Video/Subtitles uGUI", 201)]
 #if UNITY_HELPATTRIB
-	[HelpURL("http://renderheads.com/product/avpro-video/")]
+	[HelpURL("http://renderheads.com/products/avpro-video/")]
 #endif
 	public class SubtitlesUGUI : MonoBehaviour
 	{

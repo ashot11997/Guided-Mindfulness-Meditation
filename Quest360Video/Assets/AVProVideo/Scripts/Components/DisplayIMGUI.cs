@@ -12,7 +12,7 @@
 using UnityEngine;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -22,7 +22,7 @@ namespace RenderHeads.Media.AVProVideo
 	/// </summary>
 	[AddComponentMenu("AVPro Video/Display IMGUI", 200)]
 #if UNITY_HELPATTRIB
-	[HelpURL("http://renderheads.com/product/avpro-video/")]
+	[HelpURL("http://renderheads.com/products/avpro-video/")]
 #endif
 	[ExecuteInEditMode]
 	public class DisplayIMGUI : MonoBehaviour
@@ -121,7 +121,7 @@ namespace RenderHeads.Media.AVProVideo
 			if (result == null && _mediaPlayer.Info != null)
 			{
 				// If the player does support generating sRGB textures then we need to use a shader to convert them for display via IMGUI
-				if (QualitySettings.activeColorSpace == ColorSpace.Linear && _mediaPlayer.Info.PlayerSupportsLinearColorSpace())
+				if (QualitySettings.activeColorSpace == ColorSpace.Linear && !_mediaPlayer.Info.PlayerSupportsLinearColorSpace())
 				{
 					result = _shaderAlphaPacking;
 				}
@@ -282,7 +282,23 @@ namespace RenderHeads.Media.AVProVideo
 						{
 							_material.SetFloat(_propVertScale, 1f);
 						}
+
+#if UNITY_EDITOR_WIN || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
+						if (QualitySettings.activeColorSpace == ColorSpace.Linear && !GL.sRGBWrite)
+						{
+							// It seems that Graphics.Draw texture behaves differently than GUI.DrawTexture when it comes to sRGB writing
+							// on newer versions of Unity (at least 2018.2.19 and above), so now we have to force the conversion to sRGB on writing
+							GL.sRGBWrite = true;
+							Helper.DrawTexture(rect, texture, _scaleMode, _mediaPlayer.m_AlphaPacking, _material);
+							GL.sRGBWrite = false;
+						}
+						else
+						{
+							Helper.DrawTexture(rect, texture, _scaleMode, _mediaPlayer.m_AlphaPacking, _material);
+						}
+#else
 						Helper.DrawTexture(rect, texture, _scaleMode, _mediaPlayer.m_AlphaPacking, _material);
+#endif
 					}
 					else
 					{

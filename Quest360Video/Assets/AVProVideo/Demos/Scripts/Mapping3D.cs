@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo.Demos
@@ -14,7 +14,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 	public class Mapping3D : MonoBehaviour
 	{
 		[SerializeField]
-		private GameObject _cubePrefab;
+		private GameObject _cubePrefab = null;
 
 		private const int MaxCubes = 48;
 		private const float SpawnTime = 0.25f;

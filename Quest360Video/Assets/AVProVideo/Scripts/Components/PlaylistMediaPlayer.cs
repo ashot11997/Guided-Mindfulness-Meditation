@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -85,7 +85,7 @@ namespace RenderHeads.Media.AVProVideo
 	/// </summary>
 	[AddComponentMenu("AVPro Video/Playlist Media Player (BETA)", -100)]
 #if UNITY_HELPATTRIB
-	[HelpURL("http://renderheads.com/product/avpro-video/")]
+	[HelpURL("http://renderheads.com/products/avpro-video/")]
 #endif
 	public class PlaylistMediaPlayer : MediaPlayer, IMediaProducer
 	{
@@ -137,13 +137,16 @@ namespace RenderHeads.Media.AVProVideo
 		}
 			
 		[SerializeField]
-		private MediaPlayer _playerA;
+		private MediaPlayer _playerA = null;
 		
 		[SerializeField]
-		private MediaPlayer _playerB;
+		private MediaPlayer _playerB = null;
 
 		[SerializeField]
 		private bool _playlistAutoProgress = true;
+
+		[SerializeField, Tooltip("Close the video on the other MediaPlayer when it is not visible any more.  This is useful for freeing up memory and GPU decoding resources.")]
+		private bool _autoCloseVideo = true;
 
 		[SerializeField]
 		private PlaylistLoopMode _playlistLoopMode = PlaylistLoopMode.None;
@@ -162,7 +165,7 @@ namespace RenderHeads.Media.AVProVideo
 		private float _transitionDuration = 1f;
 
 		[SerializeField]
-		private Easing _transitionEasing;
+		private Easing _transitionEasing = null;
 
 		private static int _propFromTex;
 		private static int _propT;
@@ -286,6 +289,11 @@ namespace RenderHeads.Media.AVProVideo
 				else
 				{
 					_transitionTimer = _currentTransitionDuration;
+
+					if (_autoCloseVideo)
+					{
+						CurrentPlayer.CloseVideo();
+					}
 				}
 			}
 
@@ -551,12 +559,23 @@ namespace RenderHeads.Media.AVProVideo
 				_rt.DiscardContents();
 				Graphics.Blit(GetCurrentTexture(), _rt, _material);
 
-				// After the transition is complete, pause the previous video
-				if (!_pausePreviousOnTransition && !IsTransitioning())
+				// After the transition is now complete, close/pause the previous video if required
+				bool isTransitioning = IsTransitioning();
+				if (!isTransitioning)
 				{
-					if (NextPlayer != null && NextPlayer.Control.IsPlaying())
+					if (_autoCloseVideo)
 					{
-						NextPlayer.Pause();
+						if (NextPlayer != null)
+						{
+							NextPlayer.CloseVideo();
+						}
+					}
+					else if (!_pausePreviousOnTransition)
+					{
+						if (NextPlayer != null && NextPlayer.Control.IsPlaying())
+						{
+							NextPlayer.Pause();
+						}
 					}
 				}
 			}

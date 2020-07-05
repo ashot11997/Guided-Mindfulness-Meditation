@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 #if !UNITY_WSA_10_0 && !UNITY_WINRT_8_1 && !UNITY_WSA && !UNITY_WEBPLAYER
@@ -20,11 +20,11 @@ namespace RenderHeads.Media.AVProVideo
 {
 	/// <summary>
 	/// Utility class to parses an HLS(m3u8) adaptive stream from a URL to 
-	/// allow easy inspection and navitation of the stream data
+	/// allow easy inspection and navigation of the stream data
 	/// </summary>
 	public class HLSStream : Stream
 	{
-		private const string BANDWITH_NAME = "BANDWIDTH=";
+		private const string BANDWIDTH_NAME = "BANDWIDTH=";
 		private const string RESOLUTION_NAME = "RESOLUTION=";
 		private const string CHUNK_TAG = "#EXTINF";
 		private const string STREAM_TAG = "#EXT-X-STREAM-INF";
@@ -99,20 +99,19 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			if (line.StartsWith(STREAM_TAG))
 			{
-				int bandwidthPos = line.IndexOf(BANDWITH_NAME);
+				int bandwidthPos = line.IndexOf(BANDWIDTH_NAME);
 				if (bandwidthPos >= 0)
 				{
-					int endPos = line.IndexOf(',', bandwidthPos + BANDWITH_NAME.Length);
+					int endPos = line.IndexOf(',', bandwidthPos + BANDWIDTH_NAME.Length);
 					if (endPos < 0)
 					{
-						endPos = line.Length - 1;
+						endPos = line.Length;
 					}
 
-					if (endPos >= 0 && endPos - BANDWITH_NAME.Length > bandwidthPos)
+					if (endPos >= 0 && endPos - BANDWIDTH_NAME.Length > bandwidthPos)
 					{
-						int length = endPos - bandwidthPos - BANDWITH_NAME.Length;
-
-						string bandwidthString = line.Substring(bandwidthPos + BANDWITH_NAME.Length, length);
+						int length = endPos - bandwidthPos - BANDWIDTH_NAME.Length;
+						string bandwidthString = line.Substring(bandwidthPos + BANDWIDTH_NAME.Length, length);
 						if (!int.TryParse(bandwidthString, out bandwidth))
 						{
 							bandwidth = 0;
@@ -130,7 +129,7 @@ namespace RenderHeads.Media.AVProVideo
 					int endPos = line.IndexOf(',', resolutionPos + RESOLUTION_NAME.Length);
 					if (endPos < 0)
 					{
-						endPos = line.Length - 1;
+						endPos = line.Length;
 					}
 
 					if (endPos >= 0 && endPos - RESOLUTION_NAME.Length > resolutionPos)
@@ -230,7 +229,14 @@ namespace RenderHeads.Media.AVProVideo
 				if (filename.ToLower().StartsWith("http://") || filename.ToLower().StartsWith("https://"))
 				{
 #if UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_WSA
+
+#if UNITY_2017_2_OR_NEWER
+					UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(filename);
+					AsyncOperation request = www.SendWebRequest();
+#else
 					WWW www = new WWW(filename);
+#endif
+
 					int watchdog = 0;
 					while (!www.isDone && watchdog < 5000)
 					{
@@ -243,9 +249,21 @@ namespace RenderHeads.Media.AVProVideo
 					}
 					if (www.isDone && watchdog < 5000)
 					{
-						string fileString = www.text;
-						fileLines = fileString.Split('\n');
+#if UNITY_2017_2_OR_NEWER
+						if (!request.isDone)
+						{
+							Debug.LogError("[AVProVideo] Failed to download subtitles: " + www.error);
+						}
+						else
+						{
+							fileLines = ((UnityEngine.Networking.DownloadHandler)www.downloadHandler).text.Split('\n');
+						}
+#else
+						fileLines = www.text.Split('\n');
+#endif
+						
 					}
+					www.Dispose();
 #else
 
 #if SUPPORT_SSL

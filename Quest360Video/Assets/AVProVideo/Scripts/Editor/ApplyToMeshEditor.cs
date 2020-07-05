@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo.Editor
@@ -44,6 +44,8 @@ namespace RenderHeads.Media.AVProVideo.Editor
 				return;
 			}
 
+			EditorGUI.BeginChangeCheck();
+
 			EditorGUILayout.PropertyField(_propMediaPlayer);
 			EditorGUILayout.PropertyField(_propDefaultTexture);
 			EditorGUILayout.PropertyField(_propRenderer);
@@ -67,7 +69,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					}
 				}
 
-				List<GUIContent> items = new List<GUIContent>(8);
+				List<GUIContent> items = new List<GUIContent>(16);
 				foreach (MaterialProperty matProp in matProps)
 				{
 					if (matProp.type == MaterialProperty.PropType.Texture)
@@ -83,7 +85,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			}
 
 			int newTexturePropertyIndex = EditorGUILayout.Popup(_guiTextTextureProperty, texturePropertyIndex, _materialTextureProperties);
-			if (newTexturePropertyIndex != texturePropertyIndex)
+			if (newTexturePropertyIndex >= 0 && newTexturePropertyIndex < _materialTextureProperties.Length)
 			{
 				_propTexturePropertyName.stringValue = _materialTextureProperties[newTexturePropertyIndex].text;
 			}
@@ -97,6 +99,16 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			EditorGUILayout.PropertyField(_propTextureScale);
 
 			serializedObject.ApplyModifiedProperties();
+
+			bool wasModified = EditorGUI.EndChangeCheck();
+
+			if (Application.isPlaying && wasModified)
+			{
+				foreach (Object obj in this.targets)
+				{
+					((ApplyToMesh)obj).ForceUpdate();
+				}
+			}
 		}
 	}
 }

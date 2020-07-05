@@ -17,7 +17,7 @@ using Windows.Storage.Streams;
 #endif
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -30,7 +30,7 @@ namespace RenderHeads.Media.AVProVideo
 	/// </summary>
 	[AddComponentMenu("AVPro Video/Media Player", -100)]
 #if UNITY_HELPATTRIB
-	[HelpURL("http://renderheads.com/product/avpro-video/")]
+	[HelpURL("http://renderheads.com/products/avpro-video/")]
 #endif
 	public class MediaPlayer : MonoBehaviour
 	{
@@ -136,13 +136,13 @@ namespace RenderHeads.Media.AVProVideo
 
 		[SerializeField]
 		private int m_eventMask = -1;
-		
+
 		[SerializeField]
 		private FileFormat m_forceFileFormat = FileFormat.Unknown;
 
 		[SerializeField]
 		private bool _pauseMediaOnAppPause = true;
-		
+
 		[SerializeField]
 		private bool _playMediaOnAppUnpause = true;
 
@@ -191,7 +191,7 @@ namespace RenderHeads.Media.AVProVideo
 			RelativeToProjectFolder,
 			RelativeToStreamingAssetsFolder,
 			RelativeToDataFolder,
-			RelativeToPeristentDataFolder,
+			RelativeToPersistentDataFolder,
 			// TODO: Resource, AssetBundle?
 		}
 
@@ -211,6 +211,213 @@ namespace RenderHeads.Media.AVProVideo
 			public virtual string GetKeyServerURL() { return null; }
 			public virtual string GetKeyServerAuthToken() { return null; }
 			public virtual string GetDecryptionKey() { return null; }
+
+			// HTTP header support
+
+			[System.Serializable]
+			public struct HTTPHeader
+			{
+				public string header;
+				public string value;
+				public HTTPHeader(string header, string value) { this.header = header; this.value = value; }
+			}
+
+			// Make a string json compatible by escaping '\', '"' and control characters.
+			protected static string StringAsJsonString(string str)
+			{
+				System.Text.StringBuilder builder = null;
+				for (int i = 0; i < str.Length; ++i)
+				{
+					switch (str[i])
+					{
+						case '"':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\\"");
+							break;
+						case '\\':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\\\");
+							break;
+						case '/':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\/");
+							break;
+						case '\b':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\b");
+							break;
+						case '\f':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\f");
+							break;
+						case '\n':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\n");
+							break;
+						case '\r':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\r");
+							break;
+						case '\t':
+							if (builder == null)
+								builder = new System.Text.StringBuilder(str.Substring(0, i));
+							builder.Append("\\t");
+							break;
+						default:
+							if (builder != null)
+								builder.Append(str[i]);
+							break;
+					}
+				}
+				if (builder != null)
+					return builder.ToString();
+				else
+					return str;
+			}
+
+			private enum ParseJSONHeadersState
+			{
+				Begin,
+				FindKey,
+				ReadKey,
+				FindColon,
+				FindValue,
+				ReadValue,
+				FindComma,
+				Finished,
+				Failed,
+			}
+
+			// Convert the old style Json HTTP headers into new list style.
+			protected static List<HTTPHeader> ParseJsonHTTPHeadersIntoHTTPHeaderList(string httpHeaderJson)
+			{
+				// Only support "key" : "value" style construct to keep things simple
+				ParseJSONHeadersState state = ParseJSONHeadersState.Begin;
+
+				int j = 0;
+				string key = null;
+				string value = null;
+
+				List<HTTPHeader> headers = new List<HTTPHeader>();
+				System.Char c = '\0';
+				System.Char pc = c;
+				for (int i = 0; i < httpHeaderJson.Length; ++i)
+				{
+					if (state == ParseJSONHeadersState.Finished || state == ParseJSONHeadersState.Failed)
+						break;
+
+					pc = c;
+					c = httpHeaderJson[i];
+
+					switch (state)
+					{
+						case ParseJSONHeadersState.Begin:
+							// Skip any whitespace
+							if (System.Char.IsWhiteSpace(c))
+								continue;
+							// Looking for opening brace
+							if (c == '{')
+								state = ParseJSONHeadersState.FindKey;
+							else
+								state = ParseJSONHeadersState.Failed;
+							break;
+
+						case ParseJSONHeadersState.FindKey:
+							// Skip any whitespace
+							if (System.Char.IsWhiteSpace(c))
+								continue;
+							if (c == '"')
+							{
+								state = ParseJSONHeadersState.ReadKey;
+								j = i + 1;
+							}
+							else if (c == '}')
+							{
+								state = ParseJSONHeadersState.Finished;
+							}
+							else
+								state = ParseJSONHeadersState.Failed;
+							break;
+
+						case ParseJSONHeadersState.ReadKey:
+							if (c == '"' && pc != '\\')
+							{
+								key = httpHeaderJson.Substring(j, i - j);
+								state = ParseJSONHeadersState.FindColon;
+							}
+							else
+								continue;
+							break;
+
+						case ParseJSONHeadersState.FindColon:
+							// Skip any whitespace
+							if (System.Char.IsWhiteSpace(c))
+								continue;
+							if (c == ':')
+								state = ParseJSONHeadersState.FindValue;
+							else
+								state = ParseJSONHeadersState.Failed;
+							break;
+
+						case ParseJSONHeadersState.FindValue:
+							// Skip any whitespace
+							if (System.Char.IsWhiteSpace(c))
+								continue;
+							if (c == '"')
+							{
+								state = ParseJSONHeadersState.ReadValue;
+								j = i + 1;
+							}
+							else
+								state = ParseJSONHeadersState.Failed;
+							break;
+
+						case ParseJSONHeadersState.ReadValue:
+							if (c == '"' && pc != '\\')
+							{
+								value = httpHeaderJson.Substring(j, i - j);
+								headers.Add(new HTTPHeader(key, value));
+								state = ParseJSONHeadersState.FindComma;
+							}
+							else
+								continue;
+							break;
+
+						case ParseJSONHeadersState.FindComma:
+							// Skip any whitespace
+							if (System.Char.IsWhiteSpace(c))
+								continue;
+							if (c == ',')
+								state = ParseJSONHeadersState.FindKey;
+							else if (c == '}')
+								state = ParseJSONHeadersState.Finished;
+							break;
+
+						case ParseJSONHeadersState.Finished:
+							break;
+
+						case ParseJSONHeadersState.Failed:
+							break;
+					}
+				}
+
+				if (state == ParseJSONHeadersState.Finished)
+				{
+					return headers;
+				}
+				else
+				{
+					Debug.LogWarning("Failed to convert HTTP headers from Json, you will need to do this manually.");
+					return null;
+				}
+			}
 		}
 
 		[System.Serializable]
@@ -235,10 +442,37 @@ namespace RenderHeads.Media.AVProVideo
 		}
 
 		[System.Serializable]
-		public class OptionsApple : PlatformOptions
+		public class OptionsApple : PlatformOptions, ISerializationCallbackReceiver
 		{
-			[Multiline]
-			public string httpHeaderJson = null;
+			public enum AudioMode
+			{
+				SystemDirect,
+				Unity
+			};
+
+			public AudioMode audioMode = AudioMode.SystemDirect;
+
+			public List<HTTPHeader> httpHeaders = new List<HTTPHeader>();
+
+			[SerializeField, Multiline]
+			private string httpHeaderJson = null;
+
+			public string GetHTTPHeadersAsJSON()
+			{
+				if (httpHeaders.Count > 0)
+				{
+					System.Text.StringBuilder builder = new System.Text.StringBuilder();
+					int i = 0;
+					builder.Append("{");
+					builder.AppendFormat("\"{0}\":\"{1}\"", StringAsJsonString(httpHeaders[i].header), StringAsJsonString(httpHeaders[i].value));
+					for (i = 1; i < httpHeaders.Count; ++i)
+						builder.AppendFormat(",\"{0}\":\"{1}\"", StringAsJsonString(httpHeaders[i].header), StringAsJsonString(httpHeaders[i].value));
+					builder.Append("}");
+					return builder.ToString();
+				}
+				else
+					return httpHeaderJson;
+			}
 
 			// Support for handling encrypted HLS streams
 			public string keyServerURLOverride = null;
@@ -249,6 +483,8 @@ namespace RenderHeads.Media.AVProVideo
 			public override bool IsModified()
 			{
 				return (base.IsModified())
+				|| (audioMode != AudioMode.SystemDirect)
+				|| (httpHeaders != null && httpHeaders.Count > 0)
 				|| (string.IsNullOrEmpty(httpHeaderJson) == false)
 				|| (string.IsNullOrEmpty(keyServerURLOverride) == false)
 				|| (string.IsNullOrEmpty(keyServerAuthToken) == false)
@@ -258,23 +494,50 @@ namespace RenderHeads.Media.AVProVideo
 			public override string GetKeyServerURL() { return keyServerURLOverride; }
 			public override string GetKeyServerAuthToken() { return keyServerAuthToken; }
 			public override string GetDecryptionKey() { return base64EncodedKeyBlob; }
+
+			// MARK: ISerializationCallbackReceiver
+
+			public void OnBeforeSerialize()
+			{
+				// If we have the new style headers and for some reason the
+				// json still exists get rid of it.
+				if (httpHeaders != null && httpHeaders.Count > 0 && httpHeaderJson.Length > 0)
+				{
+					httpHeaderJson = null;
+				}
+			}
+
+			public void OnAfterDeserialize()
+			{
+				if (httpHeaderJson == null || httpHeaderJson.Length == 0)
+				{
+					return;
+				}
+				httpHeaders = ParseJsonHTTPHeadersIntoHTTPHeaderList(httpHeaderJson);
+				if (httpHeaders != null)
+				{
+					httpHeaderJson = null;
+				}
+			}
 		}
 
 		[System.Serializable]
 		public class OptionsMacOSX : OptionsApple
 		{
-			
+
 		}
 
 		[System.Serializable]
 		public class OptionsIOS : OptionsApple
 		{
 			public bool useYpCbCr420Textures = true;
+			public bool resumePlaybackOnAudioSessionRouteChange = false;
 
 			public override bool IsModified()
 			{
 				return (base.IsModified())
-				|| (useYpCbCr420Textures == false);
+				|| (useYpCbCr420Textures == false)
+				|| (resumePlaybackOnAudioSessionRouteChange == true);
 			}
 		}
 
@@ -285,7 +548,7 @@ namespace RenderHeads.Media.AVProVideo
 		}
 
 		[System.Serializable]
-		public class OptionsAndroid : PlatformOptions
+		public class OptionsAndroid : PlatformOptions, ISerializationCallbackReceiver
 		{
 			public Android.VideoApi videoApi = Android.VideoApi.ExoPlayer;
 			public bool useFastOesPath = false;
@@ -294,18 +557,70 @@ namespace RenderHeads.Media.AVProVideo
 			public Audio360ChannelMode audio360ChannelMode = Audio360ChannelMode.TBE_8_2;
 			public bool preferSoftwareDecoder = false;
 
-			[Multiline]
-			public string httpHeaderJson = null;
+			public List<HTTPHeader> httpHeaders = new List<HTTPHeader>();
+
+			[SerializeField, Multiline]
+			private string httpHeaderJson = null;
+
+			public string GetHTTPHeadersAsJSON()
+			{
+				if (httpHeaders.Count > 0)
+				{
+					System.Text.StringBuilder builder = new System.Text.StringBuilder();
+					int i = 0;
+					builder.Append("{");
+					builder.AppendFormat("\"{0}\":\"{1}\"", StringAsJsonString(httpHeaders[i].header), StringAsJsonString(httpHeaders[i].value));
+					for (i = 1; i < httpHeaders.Count; ++i)
+						builder.AppendFormat(",\"{0}\":\"{1}\"", StringAsJsonString(httpHeaders[i].header), StringAsJsonString(httpHeaders[i].value));
+					builder.Append("}");
+					return builder.ToString();
+				}
+				else
+					return httpHeaderJson;
+			}
 
 			[SerializeField, Tooltip("Byte offset into the file where the media file is located.  This is useful when hiding or packing media files within another file.")]
 			public int fileOffset = 0;
 
 			public override bool IsModified()
 			{
-				return (base.IsModified() || fileOffset != 0 || useFastOesPath || showPosterFrame || videoApi != Android.VideoApi.ExoPlayer || !string.IsNullOrEmpty(httpHeaderJson)
-					|| enableAudio360 || audio360ChannelMode != Audio360ChannelMode.TBE_8_2 || preferSoftwareDecoder);
+				return base.IsModified()
+					|| (fileOffset != 0)
+					|| useFastOesPath
+					|| showPosterFrame
+					|| (videoApi != Android.VideoApi.ExoPlayer)
+					|| (httpHeaders != null && httpHeaders.Count > 0)
+					|| enableAudio360
+					|| (audio360ChannelMode != Audio360ChannelMode.TBE_8_2)
+					|| preferSoftwareDecoder;
+			}
+
+			// MARK: ISerializationCallbackReceiver
+
+			public void OnBeforeSerialize()
+			{
+				// If we have the new style headers and for some reason the
+				// json still exists get rid of it.
+				if (httpHeaders != null && httpHeaders.Count > 0 && httpHeaderJson.Length > 0)
+				{
+					httpHeaderJson = null;
+				}
+			}
+
+			public void OnAfterDeserialize()
+			{
+				if (httpHeaderJson == null || httpHeaderJson.Length == 0)
+				{
+					return;
+				}
+				httpHeaders = ParseJsonHTTPHeadersIntoHTTPHeaderList(httpHeaderJson);
+				if (httpHeaders != null)
+				{
+					httpHeaderJson = null;
+				}
 			}
 		}
+
 		[System.Serializable]
 		public class OptionsWindowsPhone : PlatformOptions
 		{
@@ -320,6 +635,7 @@ namespace RenderHeads.Media.AVProVideo
 				return (base.IsModified() || !useHardwareDecoding || useTextureMips || useLowLatency || useUnityAudio || !forceAudioResample);
 			}
 		}
+
 		[System.Serializable]
 		public class OptionsWindowsUWP : PlatformOptions
 		{
@@ -334,6 +650,7 @@ namespace RenderHeads.Media.AVProVideo
 				return (base.IsModified() || !useHardwareDecoding || useTextureMips || useLowLatency || useUnityAudio || !forceAudioResample);
 			}
 		}
+
 		[System.Serializable]
 		public class OptionsWebGL : PlatformOptions
 		{
@@ -343,36 +660,27 @@ namespace RenderHeads.Media.AVProVideo
 			public override bool IsModified()
 			{
 				return (base.IsModified() || externalLibrary != WebGL.ExternalLibrary.None || useTextureMips);
-			}			
+			}
 		}
 
-        [System.Serializable]
-        public class OptionsPS4 : PlatformOptions
-        {
+		[System.Serializable]
+		public class OptionsPS4 : PlatformOptions
+		{
 
-        }
+		}
 
 		public delegate void ProcessExtractedFrame(Texture2D extractedFrame);
 
 		// TODO: move these to a Setup object
-		[SerializeField]
-		private OptionsWindows _optionsWindows = new OptionsWindows();
-		[SerializeField]
-		private OptionsMacOSX _optionsMacOSX = new OptionsMacOSX();
-		[SerializeField]
-		private OptionsIOS _optionsIOS = new OptionsIOS();
-		[SerializeField]
-		private OptionsTVOS _optionsTVOS = new OptionsTVOS();
-		[SerializeField]
-		private OptionsAndroid _optionsAndroid = new OptionsAndroid();
-		[SerializeField]
-		private OptionsWindowsPhone _optionsWindowsPhone = new OptionsWindowsPhone();
-		[SerializeField]
-		private OptionsWindowsUWP _optionsWindowsUWP = new OptionsWindowsUWP();
-		[SerializeField]
-		private OptionsWebGL _optionsWebGL = new OptionsWebGL();
-        [SerializeField]
-        private OptionsPS4 _optionsPS4 = new OptionsPS4();
+		[SerializeField] OptionsWindows _optionsWindows = new OptionsWindows();
+		[SerializeField] OptionsMacOSX _optionsMacOSX = new OptionsMacOSX();
+		[SerializeField] OptionsIOS _optionsIOS = new OptionsIOS();
+		[SerializeField] OptionsTVOS _optionsTVOS = new OptionsTVOS();
+		[SerializeField] OptionsAndroid _optionsAndroid = new OptionsAndroid();
+		[SerializeField] OptionsWindowsPhone _optionsWindowsPhone = new OptionsWindowsPhone();
+		[SerializeField] OptionsWindowsUWP _optionsWindowsUWP = new OptionsWindowsUWP();
+		[SerializeField] OptionsWebGL _optionsWebGL = new OptionsWebGL();
+		[SerializeField] OptionsPS4 _optionsPS4 = new OptionsPS4();
 
 		/// <summary>
 		/// Properties
@@ -478,9 +786,9 @@ namespace RenderHeads.Media.AVProVideo
 				if (!s_GlobalStartup)
 				{
 #if UNITY_5 || UNITY_5_4_OR_NEWER
-					Helper.LogInfo(string.Format("Initialising AVPro Video (script v{0} plugin v{1}) on {2}/{3} (MT {4}) on {5}", Helper.ScriptVersion, mediaPlayer.GetVersion(), SystemInfo.graphicsDeviceName, SystemInfo.graphicsDeviceVersion, SystemInfo.graphicsMultiThreaded, Application.platform));
+					Helper.LogInfo(string.Format("Initialising AVPro Video (script v{0} plugin v{1}) on {2}/{3} (MT {4}) on {5} {6}", Helper.ScriptVersion, mediaPlayer.GetVersion(), SystemInfo.graphicsDeviceName, SystemInfo.graphicsDeviceVersion, SystemInfo.graphicsMultiThreaded, Application.platform, SystemInfo.operatingSystem));
 #else
-					Helper.LogInfo(string.Format("Initialising AVPro Video (script v{0} plugin v{1}) on {2}/{3} on {4}", Helper.ScriptVersion, mediaPlayer.GetVersion(), SystemInfo.graphicsDeviceName, SystemInfo.graphicsDeviceVersion, Application.platform));
+					Helper.LogInfo(string.Format("Initialising AVPro Video (script v{0} plugin v{1}) on {2}/{3} on {4} {5}", Helper.ScriptVersion, mediaPlayer.GetVersion(), SystemInfo.graphicsDeviceName, SystemInfo.graphicsDeviceVersion, Application.platform, SystemInfo.operatingSystem));
 #endif
 
 #if AVPROVIDEO_BETA_SUPPORT_TIMESCALE
@@ -488,7 +796,7 @@ namespace RenderHeads.Media.AVProVideo
 #endif
 
 #if (UNITY_HAS_GOOGLEVR || UNITY_DAYDREAM) && (UNITY_ANDROID)
-					// NOte: WE've removed this minor optimisation until Daydream support is more offical..
+					// NOTE: We've removed this minor optimisation until Daydream support is more official..
 					// It seems to work with the official release, but in 5.6beta UNITY_HAS_GOOGLEVR is always defined
 					// even for GearVR, which causes a problem as it doesn't use the same stereo eye determination method
 
@@ -627,7 +935,7 @@ namespace RenderHeads.Media.AVProVideo
 					{
 						checkForFileExist = false;
 					}
-#if (UNITY_ANDROID || (UNITY_5_2 && UNITY_WSA))
+#if (REAL_ANDROID || (UNITY_5_2 && UNITY_WSA))
 					checkForFileExist = false;
 #endif
 
@@ -696,15 +1004,38 @@ namespace RenderHeads.Media.AVProVideo
 
 		private IEnumerator LoadSubtitlesCoroutine(string url, FileLocation fileLocation, string filePath)
 		{
+#if UNITY_5_4_OR_NEWER
+			UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(url);
+#elif UNITY_5_5_OR_NEWER
+			UnityEngine.Experimental.Networking.UnityWebRequest www = UnityEngine.Experimental.Networking.UnityWebRequest.Get(url);
+#else
 			WWW www = new WWW(url);
-
 			yield return www;
+#endif
+
+#if UNITY_2017_2_OR_NEWER
+			yield return www.SendWebRequest();
+#elif UNITY_5_4_OR_NEWER
+			yield return www.Send();
+#endif
 
 			string subtitleData = string.Empty;
+#if UNITY_2017_1_OR_NEWER
+			if (!www.isNetworkError)
+#elif UNITY_5_4_OR_NEWER
+			if (!www.isError)
+#endif
+
+#if UNITY_5_4_OR_NEWER
+			{
+				subtitleData = ((UnityEngine.Networking.DownloadHandler)www.downloadHandler).text;
+			}
+#else
 			if (string.IsNullOrEmpty(www.error))
 			{
 				subtitleData = www.text;
 			}
+#endif
 			else
 			{
 				Debug.LogError("[AVProVideo] Error loading subtitles '" + www.error + "' from " + url);
@@ -853,9 +1184,8 @@ namespace RenderHeads.Media.AVProVideo
 					{
 						checkForFileExist = false;
 						httpHeaderJson = GetPlatformHttpHeaderJson();
-						// TODO: validate the above JSON
 					}
-#if (UNITY_ANDROID || (UNITY_5_2 && UNITY_WSA))
+#if (REAL_ANDROID || (UNITY_5_2 && UNITY_WSA))
 					checkForFileExist = false;
 #endif
 
@@ -865,9 +1195,9 @@ namespace RenderHeads.Media.AVProVideo
 					}
 					else
 					{
-						Helper.LogInfo("Opening " + fullPath + " (offset " + fileOffset + ")", this);
+						Helper.LogInfo(string.Format("Opening {0} (offset {1}) with API {2}", fullPath, fileOffset, GetPlatformVideoApiString()), this);
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN || (!UNITY_EDITOR && UNITY_STANDALONE_WIN)
 						if (_optionsWindows.enableAudio360)
 						{
 							m_Control.SetAudioChannelMode(_optionsWindows.audio360ChannelMode);
@@ -913,7 +1243,7 @@ namespace RenderHeads.Media.AVProVideo
 				// Potentially override the file location
 				long fileOffset = GetPlatformFileOffset();
 
-				if (!m_Control.OpenVideoFromFile(ras, m_VideoPath, fileOffset, null, m_manuallySetAudioSourceProperties ? m_sourceSampleRate : 0, 
+				if (!m_Control.OpenVideoFromFile(ras, m_VideoPath, fileOffset, null, m_manuallySetAudioSourceProperties ? m_sourceSampleRate : 0,
 					m_manuallySetAudioSourceProperties ? m_sourceChannels : 0))
 				{
 					Debug.LogError("[AVProVideo] Failed to open " + m_VideoPath, this);
@@ -1082,6 +1412,10 @@ namespace RenderHeads.Media.AVProVideo
 				UpdateErrors();
 				UpdateEvents();
 			}
+
+#if UNITY_EDITOR && UNITY_5_4_OR_NEWER
+			CheckEditorAudioMute();
+#endif
 		}
 
 		private void LateUpdate()
@@ -1267,7 +1601,7 @@ namespace RenderHeads.Media.AVProVideo
 #elif (UNITY_WEBGL)
 			result = Platform.WebGL;
 #elif (UNITY_PS4)
-            result = Platform.PS4;
+			result = Platform.PS4;
 #endif
 
 #endif
@@ -1304,7 +1638,7 @@ namespace RenderHeads.Media.AVProVideo
 #elif (UNITY_WEBGL)
 			result = _optionsWebGL;
 #elif (UNITY_PS4)
-            result = _optionsPS4;
+			result = _optionsPS4;
 #endif
 
 #endif
@@ -1342,9 +1676,9 @@ namespace RenderHeads.Media.AVProVideo
 				case Platform.WebGL:
 					result = _optionsWebGL;
 					break;
-                case Platform.PS4:
-                    result = _optionsPS4;
-                    break;
+				case Platform.PS4:
+					result = _optionsPS4;
+					break;
 			}
 
 			return result;
@@ -1380,9 +1714,9 @@ namespace RenderHeads.Media.AVProVideo
 				case Platform.WebGL:
 					result = "_optionsWebGL";
 					break;
-                case Platform.PS4:
-                    result = "_optionsPS4";
-                    break;
+				case Platform.PS4:
+					result = "_optionsPS4";
+					break;
 			}
 
 			return result;
@@ -1399,14 +1733,14 @@ namespace RenderHeads.Media.AVProVideo
 				case FileLocation.RelativeToDataFolder:
 					result = Application.dataPath;
 					break;
-				case FileLocation.RelativeToPeristentDataFolder:
+				case FileLocation.RelativeToPersistentDataFolder:
 					result = Application.persistentDataPath;
 					break;
 				case FileLocation.RelativeToProjectFolder:
 #if !UNITY_WINRT_8_1
-                    string path = "..";
+					string path = "..";
 #if UNITY_STANDALONE_OSX && !UNITY_EDITOR_OSX
-                        path += "/..";
+						path += "/..";
 #endif
 					result = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, path));
 					result = result.Replace('\\', '/');
@@ -1430,7 +1764,7 @@ namespace RenderHeads.Media.AVProVideo
 						result = path;
 						break;
 					case FileLocation.RelativeToDataFolder:
-					case FileLocation.RelativeToPeristentDataFolder:
+					case FileLocation.RelativeToPersistentDataFolder:
 					case FileLocation.RelativeToProjectFolder:
 					case FileLocation.RelativeToStreamingAssetsFolder:
 						result = System.IO.Path.Combine(GetPath(location), path);
@@ -1440,14 +1774,37 @@ namespace RenderHeads.Media.AVProVideo
 			return result;
 		}
 
+		private string GetPlatformVideoApiString()
+		{
+			string result = string.Empty;
+#if UNITY_EDITOR
+	#if UNITY_EDITOR_OSX
+	#elif UNITY_EDITOR_WIN
+			result = _optionsWindows.videoApi.ToString();
+	#elif UNITY_EDITOR_LINUX
+	#endif
+#else
+	#if UNITY_STANDALONE_WIN
+			result = _optionsWindows.videoApi.ToString();
+	#elif UNITY_ANDROID
+			result = _optionsAndroid.videoApi.ToString();
+	#endif
+#endif
+			return result;
+		}
+
 		private long GetPlatformFileOffset()
 		{
 			long result = 0;
-#if UNITY_EDITOR_OSX
-#elif UNITY_EDITOR_WIN
-#elif UNITY_EDITOR_LINUX
-#elif UNITY_ANDROID
+#if UNITY_EDITOR
+	#if UNITY_EDITOR_OSX
+	#elif UNITY_EDITOR_WIN
+	#elif UNITY_EDITOR_LINUX
+	#endif
+#else
+	#if UNITY_ANDROID
 			result = _optionsAndroid.fileOffset;
+	#endif
 #endif
 			return result;
 		}
@@ -1457,20 +1814,20 @@ namespace RenderHeads.Media.AVProVideo
 			string result = null;
 
 #if UNITY_EDITOR_OSX
-			result = _optionsMacOSX.httpHeaderJson;
+			result = _optionsMacOSX.GetHTTPHeadersAsJSON();
 #elif UNITY_EDITOR_WIN
 #elif UNITY_EDITOR_LINUX
 #elif UNITY_STANDALONE_OSX
-			result = _optionsMacOSX.httpHeaderJson;
+			result = _optionsMacOSX.GetHTTPHeadersAsJSON();
 #elif UNITY_STANDALONE_WIN
 #elif UNITY_WSA_10_0
 #elif UNITY_WINRT_8_1
 #elif UNITY_IOS || UNITY_IPHONE
-			result = _optionsIOS.httpHeaderJson;
+			result = _optionsIOS.GetHTTPHeadersAsJSON();
 #elif UNITY_TVOS
-			result = _optionsTVOS.httpHeaderJson;
+			result = _optionsTVOS.GetHTTPHeadersAsJSON();
 #elif UNITY_ANDROID
-			result = _optionsAndroid.httpHeaderJson;
+			result = _optionsAndroid.GetHTTPHeadersAsJSON();
 #elif UNITY_WEBGL
 #endif
 
@@ -1481,6 +1838,13 @@ namespace RenderHeads.Media.AVProVideo
 
 			return result;
 		}
+
+	#if (UNITY_EDITOR_WIN || (!UNITY_EDITOR && UNITY_STANDALONE_WIN))
+		[System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, EntryPoint = "GetShortPathNameW", SetLastError=true)]
+		private static extern int GetShortPathName([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pathName,
+													[System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] System.Text.StringBuilder shortName,
+													int cbShortName);
+	#endif
 
 		private string GetPlatformFilePath(Platform platform, ref string filePath, ref FileLocation fileLocation)
 		{
@@ -1502,6 +1866,25 @@ namespace RenderHeads.Media.AVProVideo
 
 			result = GetFilePath(filePath, fileLocation);
 
+			#if (UNITY_EDITOR_WIN || (!UNITY_EDITOR && UNITY_STANDALONE_WIN))
+			// Handle very long file paths by converting to DOS 8.3 format
+			if (result.Length > 200 && !result.Contains("://"))
+			{
+				const string pathToken = @"\\?\";
+				result = pathToken + result.Replace("/","\\");
+				int length = GetShortPathName(result, null, 0);
+				if (length > 0)
+				{
+					System.Text.StringBuilder sb = new System.Text.StringBuilder(length);
+					if (0 != GetShortPathName(result, sb, length))
+					{
+						result = sb.ToString().Replace(pathToken, "");
+						Debug.LogWarning("[AVProVideo] Long path detected. Changing to DOS 8.3 format");
+					}
+				}
+			}
+			#endif
+
 			return result;
 		}
 #endregion
@@ -1516,7 +1899,10 @@ namespace RenderHeads.Media.AVProVideo
 #if UNITY_EDITOR
 #if (UNITY_EDITOR_OSX)
 #if UNITY_EDITOR_64
-			mediaPlayer = new OSXMediaPlayer();
+			OSXMediaPlayer macOSMediaPlayer = new OSXMediaPlayer();
+			mediaPlayer = macOSMediaPlayer;
+			if (_optionsMacOSX.audioMode == OptionsApple.AudioMode.Unity)
+				macOSMediaPlayer.EnableAudioCapture();
 #else
 			Debug.LogWarning("[AVProVideo] 32-bit OS X Unity editor not supported.  64-bit required.");
 #endif
@@ -1540,13 +1926,21 @@ namespace RenderHeads.Media.AVProVideo
 #endif
 			}
 #elif (UNITY_STANDALONE_OSX || UNITY_IPHONE || UNITY_IOS || UNITY_TVOS)
+			bool appleEnableAudioCapture = false;
 #if UNITY_TVOS
-			mediaPlayer = new OSXMediaPlayer(_optionsTVOS.useYpCbCr420Textures);
+			OSXMediaPlayer osxMediaPlayer = new OSXMediaPlayer(_optionsTVOS.useYpCbCr420Textures);
+			appleEnableAudioCapture = _optionsTVOS.audioMode == OptionsApple.AudioMode.Unity;
 #elif (UNITY_IOS || UNITY_IPHONE)
-			mediaPlayer = new OSXMediaPlayer(_optionsIOS.useYpCbCr420Textures);
+			OSXMediaPlayer osxMediaPlayer = new OSXMediaPlayer(_optionsIOS.useYpCbCr420Textures);
+			osxMediaPlayer.SetResumePlaybackOnAudioSessionRouteChange(_optionsIOS.resumePlaybackOnAudioSessionRouteChange);
+			appleEnableAudioCapture = _optionsIOS.audioMode == OptionsApple.AudioMode.Unity;
 #else
-			mediaPlayer = new OSXMediaPlayer();
+			OSXMediaPlayer osxMediaPlayer = new OSXMediaPlayer();
+			appleEnableAudioCapture = _optionsMacOSX.audioMode == OptionsApple.AudioMode.Unity;
 #endif
+			mediaPlayer = osxMediaPlayer;
+			if (appleEnableAudioCapture)
+				osxMediaPlayer.EnableAudioCapture();
 
 #elif (UNITY_ANDROID)
 			// Initialise platform (also unpacks videos from StreamingAsset folder (inside a jar), to the persistent data path)
@@ -1556,10 +1950,10 @@ namespace RenderHeads.Media.AVProVideo
 			_optionsAndroid.enableAudio360, _optionsAndroid.audio360ChannelMode, _optionsAndroid.preferSoftwareDecoder);
 			}
 #elif (UNITY_WEBGL)
-            WebGLMediaPlayer.InitialisePlatform();
-            mediaPlayer = new WebGLMediaPlayer(_optionsWebGL.externalLibrary, _optionsWebGL.useTextureMips);
+			WebGLMediaPlayer.InitialisePlatform();
+			mediaPlayer = new WebGLMediaPlayer(_optionsWebGL.externalLibrary, _optionsWebGL.useTextureMips);
 #elif (UNITY_PS4)
-            mediaPlayer = new PS4MediaPlayer();
+			mediaPlayer = new PS4MediaPlayer();
 #endif
 #endif
 
@@ -1716,6 +2110,17 @@ namespace RenderHeads.Media.AVProVideo
 			{
 				Debug.LogError("[AVProVideo] Error: " + Helper.GetErrorMessage(errorCode));
 
+				// Display additional information for load failures
+				if (ErrorCode.LoadFailed == errorCode)
+				{
+					#if !UNITY_EDITOR && UNITY_ANDROID
+					if (m_VideoPath.ToLower().Contains("http://"))
+					{
+						Debug.LogError("Android 8 and above require HTTPS by default, change to HTTPS or enable ClearText in the AndroidManifest.xml");
+					}
+					#endif
+				}
+
 				if (m_events != null && m_events.HasListeners() && IsHandleEvent(MediaPlayerEvent.EventType.Error))
 				{
 					m_events.Invoke(this, MediaPlayerEvent.EventType.Error, errorCode);
@@ -1753,14 +2158,14 @@ namespace RenderHeads.Media.AVProVideo
 						m_Control != null && m_Control.IsPlaying() && !m_Control.IsFinished())
 					{
 						bool reset = true;
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR_WIN || (!UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_WSA))
 						reset = false;
 						if (m_Info.HasVideo())
-						{	
+						{
 							// Don't reset if within a frame of the end of the video, important for time > duration workaround
-							float msPerFrame = 1000f / m_Info.GetDurationMs();
+							float msPerFrame = 1000f / m_Info.GetVideoFrameRate();
 							//Debug.Log(m_Info.GetDurationMs() - m_Control.GetCurrentTimeMs() + " " + msPerFrame);
-							if(m_Info.GetDurationMs() - m_Control.GetCurrentTimeMs() > 100f)
+							if(m_Info.GetDurationMs() - m_Control.GetCurrentTimeMs() > msPerFrame)
 							{
 								reset = true;
 							}
@@ -1866,9 +2271,9 @@ namespace RenderHeads.Media.AVProVideo
 				switch (et)
 				{
 					case MediaPlayerEvent.EventType.FinishedPlaying:
-						
+						//Debug.Log(m_Control.GetCurrentTimeMs() + " " + m_Info.GetDurationMs());
 						result = (!m_Control.IsLooping() && m_Control.CanPlay() && m_Control.IsFinished())
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR_WIN || (!UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_WSA))
 							|| (m_Control.GetCurrentTimeMs() > m_Info.GetDurationMs() && !m_Control.IsLooping())
 #endif
 							;
@@ -1877,7 +2282,7 @@ namespace RenderHeads.Media.AVProVideo
 						result = (m_Control.HasMetaData());
 						break;
 					case MediaPlayerEvent.EventType.FirstFrameReady:
-						result = (m_Texture != null && m_Control.CanPlay() && m_Texture.GetTextureFrameCount() > 0);
+						result = (m_Texture != null && m_Control.CanPlay() && m_Control.HasMetaData() && m_Texture.GetTextureFrameCount() > 0);
 						break;
 					case MediaPlayerEvent.EventType.ReadyToPlay:
 						result = (!m_Control.IsPlaying() && m_Control.CanPlay() && !m_AutoStart);
@@ -1941,7 +2346,7 @@ namespace RenderHeads.Media.AVProVideo
 		{
 #if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
 //			Debug.Log("OnApplicationPause: pauseStatus: " + pauseStatus);
-			
+
 			if (pauseStatus)
 			{
 				if (_pauseMediaOnAppPause)
@@ -1949,8 +2354,9 @@ namespace RenderHeads.Media.AVProVideo
 					if (m_Control!= null && m_Control.IsPlaying())
 					{
 						m_WasPlayingOnPause = true;
+#if !UNITY_IPHONE
 						m_Control.Pause();
-
+#endif
 						Helper.LogInfo("OnApplicationPause: pausing video");
 					}
 				}
@@ -1969,7 +2375,7 @@ namespace RenderHeads.Media.AVProVideo
 #endregion
 
 #region Save Frame To PNG
-#if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR
+#if UNITY_EDITOR || (!UNITY_EDITOR && (UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX))
 		[ContextMenu("Save Frame To PNG")]
 		public void SaveFrameToPng()
 		{
@@ -2028,7 +2434,7 @@ namespace RenderHeads.Media.AVProVideo
 			return m_DummyCamera;
 		}
 
-		private IEnumerator ExtractFrameCoroutine(Texture2D target, ProcessExtractedFrame callback, float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000)
+		private IEnumerator ExtractFrameCoroutine(Texture2D target, ProcessExtractedFrame callback, float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000, int timeThresholdMs = 100)
 		{
 #if REAL_ANDROID || UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_IOS || UNITY_TVOS
 			Texture2D result = target;
@@ -2043,8 +2449,8 @@ namespace RenderHeads.Media.AVProVideo
 
 					float seekTimeMs = timeSeconds * 1000f;
 
-					// If the frame is already available just grab it
-					if (TextureProducer.GetTexture() != null && m_Control.GetCurrentTimeMs() == seekTimeMs)
+					// If the right frame is already available (or close enough) just grab it
+					if (TextureProducer.GetTexture() != null && (Mathf.Abs(m_Control.GetCurrentTimeMs() - seekTimeMs) < timeThresholdMs))
 					{
 						frame = TextureProducer.GetTexture();
 					}
@@ -2084,31 +2490,30 @@ namespace RenderHeads.Media.AVProVideo
 					frame = TextureProducer.GetTexture();
 				}
 			}
-
 			if (frame != null)
 			{
 				result = Helper.GetReadableTexture(frame, TextureProducer.RequiresVerticalFlip(), Helper.GetOrientation(Info.GetTextureTransform()), target);
 			}
 #else
-			Texture2D result = ExtractFrame(target, timeSeconds, accurateSeek, timeoutMs);
+			Texture2D result = ExtractFrame(target, timeSeconds, accurateSeek, timeoutMs, timeThresholdMs);
 #endif
 			callback(result);
 
 			yield return null;
 		}
 
-		public void ExtractFrameAsync(Texture2D target, ProcessExtractedFrame callback, float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000)
+		public void ExtractFrameAsync(Texture2D target, ProcessExtractedFrame callback, float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000, int timeThresholdMs = 100)
 		{
-			StartCoroutine(ExtractFrameCoroutine(target, callback, timeSeconds, accurateSeek, timeoutMs));
+			StartCoroutine(ExtractFrameCoroutine(target, callback, timeSeconds, accurateSeek, timeoutMs, timeThresholdMs));
 		}
 
 		// "target" can be null or you can pass in an existing texture.
-		public Texture2D ExtractFrame(Texture2D target, float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000)
+		public Texture2D ExtractFrame(Texture2D target, float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000, int timeThresholdMs = 100)
 		{
 			Texture2D result = target;
 
-			// Extract frames returns the interal frame of the video player
-			Texture frame = ExtractFrame(timeSeconds, accurateSeek, timeoutMs);
+			// Extract frames returns the internal frame of the video player
+			Texture frame = ExtractFrame(timeSeconds, accurateSeek, timeoutMs, timeThresholdMs);
 			if (frame != null)
 			{
 				result = Helper.GetReadableTexture(frame, TextureProducer.RequiresVerticalFlip(), Helper.GetOrientation(Info.GetTextureTransform()), target);
@@ -2117,7 +2522,7 @@ namespace RenderHeads.Media.AVProVideo
 			return result;
 		}
 
-		private Texture ExtractFrame(float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000)
+		private Texture ExtractFrame(float timeSeconds = -1f, bool accurateSeek = true, int timeoutMs = 1000, int timeThresholdMs = 100)
 		{
 			Texture result = null;
 
@@ -2129,8 +2534,8 @@ namespace RenderHeads.Media.AVProVideo
 
 					float seekTimeMs = timeSeconds * 1000f;
 
-					// If the frame is already available just grab it
-					if (TextureProducer.GetTexture() != null && m_Control.GetCurrentTimeMs() == seekTimeMs)
+					// If the right frame is already available (or close enough) just grab it
+					if (TextureProducer.GetTexture() != null && (Mathf.Abs(m_Control.GetCurrentTimeMs() - seekTimeMs) < timeThresholdMs))
 					{
 						result = TextureProducer.GetTexture();
 					}
@@ -2162,6 +2567,24 @@ namespace RenderHeads.Media.AVProVideo
 			return result;
 		}
 #endregion
+
+#if UNITY_EDITOR && UNITY_5_4_OR_NEWER
+#region Audio Mute Support for Unity Editor
+		private bool _unityAudioMasterMute = false;
+		private void CheckEditorAudioMute()
+		{
+			// Detect a change
+			if (UnityEditor.EditorUtility.audioMasterMute != _unityAudioMasterMute)
+			{
+				_unityAudioMasterMute = UnityEditor.EditorUtility.audioMasterMute;
+				if (m_Control != null)
+				{
+					m_Control.MuteAudio(m_Muted || _unityAudioMasterMute);
+				}
+			}
+		}
+#endregion
+#endif
 
 #region Play/Pause Support for Unity Editor
 		// This code handles the pause/play buttons in the editor

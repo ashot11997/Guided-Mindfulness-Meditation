@@ -59,7 +59,10 @@
 				float2 uv2 : TEXCOORD1;	// Custom uv set for right eye (left eye is in TEXCOORD0)
 	#endif
 #endif
-				
+
+#ifdef UNITY_STEREO_INSTANCING_ENABLED
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+#endif
             };
 
             struct v2f
@@ -88,6 +91,10 @@
 #if STEREO_DEBUG
 				float4 tint : COLOR;
 #endif
+
+#ifdef UNITY_STEREO_INSTANCING_ENABLED
+				UNITY_VERTEX_OUTPUT_STEREO
+#endif
             };
 
             uniform sampler2D _MainTex;
@@ -104,6 +111,13 @@
             v2f vert (appdata v)
             {
                 v2f o;
+
+#ifdef UNITY_STEREO_INSTANCING_ENABLED
+				UNITY_SETUP_INSTANCE_ID(v);						// calculates and sets the built-n unity_StereoEyeIndex and unity_InstanceID Unity shader variables to the correct values based on which eye the GPU is currently rendering
+				UNITY_INITIALIZE_OUTPUT(v2f, o);				// initializes all v2f values to 0
+				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);		// tells the GPU which eye in the texture array it should render to
+#endif
+								
 				o.vertex = XFormObjectToClip(v.vertex);
 #if !HIGH_QUALITY
 				o.uv.zw = 0.0;

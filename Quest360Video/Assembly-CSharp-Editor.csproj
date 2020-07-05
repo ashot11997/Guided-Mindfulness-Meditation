@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\AVProVideo\Scripts\Components\Support\PlayMaker\Editor\AVProVideoActionHeaderPropertyDrawer.cs" />
+    <Compile Include="Assets\AVProVideo\Scripts\Editor\ApplyToMaterialEditor.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Editor\ApplyToMeshEditor.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Editor\AudioOutputEditor.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Editor\DisplayUGUIEditor.cs" />

@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo.Editor
@@ -23,6 +23,14 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			EditorGUILayout.LabelField("Items");
 
 			SerializedProperty propItems = property.FindPropertyRelative("_items");
+
+			if (propItems.arraySize == 0)
+			{
+				if (GUILayout.Button("Insert Item"))
+				{
+					propItems.InsertArrayElementAtIndex(0);
+				}
+			}
 
 			for (int i = 0; i < propItems.arraySize; i++)
 			{
@@ -134,6 +142,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 		private SerializedProperty _propNextTransition;
 		private SerializedProperty _propPlaylist;
 		private SerializedProperty _propPlaylistAutoProgress;
+		private SerializedProperty _propAutoCloseVideo;
 		private SerializedProperty _propPlaylistLoopMode;
 		private SerializedProperty _propPausePreviousOnTransition;
 		private SerializedProperty _propTransitionDuration;
@@ -149,6 +158,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			_propPausePreviousOnTransition = serializedObject.FindProperty("_pausePreviousOnTransition");
 			_propPlaylist = serializedObject.FindProperty("_playlist");
 			_propPlaylistAutoProgress = serializedObject.FindProperty("_playlistAutoProgress");
+			_propAutoCloseVideo = serializedObject.FindProperty("_autoCloseVideo");
 			_propPlaylistLoopMode = serializedObject.FindProperty("_playlistLoopMode");
 		}
 
@@ -176,6 +186,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			GUILayout.Label("Playlist", EditorStyles.boldLabel);
 			EditorGUILayout.PropertyField(_propPlaylistAutoProgress, new GUIContent("Auto Progress"));
 			EditorGUILayout.PropertyField(_propPlaylistLoopMode, new GUIContent("Loop Mode"));
+			EditorGUILayout.PropertyField(_propAutoCloseVideo);
 			EditorGUILayout.PropertyField(_propPlaylist);
 			EditorGUILayout.Space(); 
 			EditorGUILayout.Space();

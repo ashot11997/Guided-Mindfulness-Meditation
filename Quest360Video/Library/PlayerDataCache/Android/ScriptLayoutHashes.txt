@@ -1,8 +1,9 @@
 Android
 PlayerPath?
-C:/Users/Editor 1/Desktop/MeditationApp.apk
+C:/Users/Editor 1/Downloads/App.apk
 SceneListBegin?
 Assets/AVProVideo/Demos/Scenes/08_Demo_360SphereVideo.unity
+Assets/Scenes/VideoScene.unity
 SceneListEnd?
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.ONSPVersion
 bf5cb87c773ea378a3f5ac036aab367b Assembly-CSharp.dll:.SocialPlatformManager
@@ -163,7 +164,7 @@ ad9173d3a69d99153f38ed4b62226129 UnityEngine.Networking.dll:UnityEngine.Networki
 5887ef1bc706b22b773d253fd443ceef UnityEngine.Networking.dll:UnityEngine.Networking.NetworkTransformVisualizer
 08620780b69fc9e76cd687022de1f5b6 Assembly-CSharp.dll:OculusSampleFramework.ControllerBoxController
 a3d1f52d83f058b4557b96b9ac692b76 Assembly-CSharp.dll:OculusSampleFramework.HandsManager
-8645f3c528e3530c7ad45ec8fa15ee67 Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.PlaylistMediaPlayer
+2769904c85ad753aab2f4c5cfc29c9d2 Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.PlaylistMediaPlayer
 d251bf88db6c95a6b1aa0b69298da9ef UnityEngine.SpatialTracking.dll:UnityEngine.SpatialTracking.TrackedPoseDriver
 56c46575a0b3d09bf963e7879dbe6535 Oculus.VR.dll:.OVRControllerHelper
 71bb6a6b6c8f052f948db64c7dd3ca4f Oculus.VR.dll:.OVRResources
@@ -329,7 +330,7 @@ a6ded2673e2fb033edf3bf8af9c7c7dc Assembly-CSharp.dll:.OvrAvatarMaterialManager
 dbb1a6051987b4922d94d1caad387b1c Assembly-CSharp.dll:.ONSPPropagationMaterial
 3b760e6526e13f7504f59e210145899a Unity.TextMeshPro.dll:TMPro.TextMeshProUGUI
 bbf6c8bbcb3097b51034aeb2a5b7693a Oculus.Platform.dll:Oculus.Platform.Samples.VrHoops.MatchController
-743177c1ef697d23713cab05ce63db27 Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.MediaPlayer
+39daa1147e272b7522518a82650497f4 Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.MediaPlayer
 7296e600c4df45c20983450566e1ad26 Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.Demos.Mapping3D
 4ca6f90afe62fc92d15b7d34228515d1 Assembly-CSharp.dll:.GazeTargetSpawner
 507174d46dacbc5fe45e28485db5dd1e Unity.Analytics.DataPrivacy.dll:UnityEngine.Analytics.DataPrivacyButton
@@ -366,7 +367,7 @@ c1313d723d19b50c00b55c8ce726b990 Assembly-CSharp.dll:.TeleportTargetHandlerNavMe
 85e8aa29d665952264bc2b39d7dd56b9 Assembly-CSharp.dll:.LaserPointer
 121c8e235aafa9d7070bce4bdc42c658 Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.Demos.LoadFromBufferInChunks
 17653b21203f576d6729f3490936652e Assembly-CSharp.dll:OculusSampleFramework.FingerTipPokeTool
-0fd96afa93ae2a2f0444276a4caa11ee Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.ApplyToMaterial
+d1243d0c70f8282bb4bd2d4e167134db Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.ApplyToMaterial
 2c8713480afc658528751d731eed8a21 Assembly-CSharp.dll:.TeleportTransitionBlink
 8649814970b42d345b89944b862453cc Unity.TextMeshPro.dll:TMPro.TMP_SubMesh
 d17f1b59c863591022666aeda44e2e71 Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.Demos.ChangeAudioTrack
@@ -380,3 +381,4 @@ cd06391f9225499fb9ea605ab668b015 Oculus.Platform.dll:Oculus.Platform.Samples.VrH
 a8870609d5ff474352f315eba63aaa8b Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.Demos.FrameExtract
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.DebugUISample
 18235af34262c9d1c806370a73196694 Assembly-CSharp.dll:OculusSampleFramework.ButtonController
+19daab6d3e6705675f1ac1b5e44f230d Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.AudioChannelMixer

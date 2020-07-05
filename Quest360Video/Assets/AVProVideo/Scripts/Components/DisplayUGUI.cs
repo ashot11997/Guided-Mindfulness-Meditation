@@ -14,7 +14,7 @@
 	#endif
 #endif
 
-#if (!UNITY_STANDALONE_WIN && !UNITY_EDITOR_WIN) && (UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE || UNITY_IOS || UNITY_TVOS)
+#if (!UNITY_STANDALONE_WIN && !UNITY_EDITOR_WIN) && (UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE || UNITY_IOS || UNITY_TVOS || UNITY_ANDROID)
 	#define UNITY_PLATFORM_SUPPORTS_VIDEOTRANSFORM
 #endif
 
@@ -33,7 +33,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -43,7 +43,7 @@ namespace RenderHeads.Media.AVProVideo
 	/// </summary>
 	[ExecuteInEditMode]
 #if UNITY_HELPATTRIB
-	[HelpURL("http://renderheads.com/product/avpro-video/")]
+	[HelpURL("http://renderheads.com/products/avpro-video/")]
 #endif
 	[AddComponentMenu("AVPro Video/Display uGUI", 200)]
 	public class DisplayUGUI : UnityEngine.UI.MaskableGraphic
@@ -87,6 +87,7 @@ namespace RenderHeads.Media.AVProVideo
 		private static int _propChromaTex;
 		private const string PropYpCbCrTransformName = "_YpCbCrTransform";
 		private static int _propYpCbCrTransform;
+		private static int _propCroppingScalars;
 
 #if UNITY_UGUI_NOSET_TEXELSIZE
 		private static int _propMainTextureTexelSize;
@@ -111,44 +112,75 @@ namespace RenderHeads.Media.AVProVideo
 				_propChromaTex = Shader.PropertyToID(PropChromaTexName);
 				_propUseYpCbCr = Shader.PropertyToID("_UseYpCbCr");
 				_propYpCbCrTransform = Shader.PropertyToID(PropYpCbCrTransformName);
+				_propCroppingScalars = Shader.PropertyToID("_CroppingScalars");
 #if UNITY_UGUI_NOSET_TEXELSIZE
 				_propMainTextureTexelSize = Shader.PropertyToID("_MainTex_TexelSize");
 #endif
 			}
 
-			if (_shaderAlphaPacking == null)
+#if UNITY_IOS
+			bool hasMask = HasMask(gameObject);
+			if (hasMask)
 			{
-				_shaderAlphaPacking = Shader.Find("AVProVideo/UI/Transparent Packed");
-				if (_shaderAlphaPacking == null)
-				{
-					Debug.LogWarning("[AVProVideo] Missing shader AVProVideo/UI/Transparent Packed");
-				}
-			}
-			if (_shaderStereoPacking == null)
-			{
-				_shaderStereoPacking = Shader.Find("AVProVideo/UI/Stereo");
-				if (_shaderStereoPacking == null)
-				{
-					Debug.LogWarning("[AVProVideo] Missing shader AVProVideo/UI/Stereo");
-				}
-			}
-#if REAL_ANDROID
-			if (_shaderAndroidOES == null)
-			{
-				_shaderAndroidOES = Shader.Find("AVProVideo/UI/AndroidOES");
-				if (_shaderAndroidOES == null)
-				{
-					Debug.LogWarning("[AVProVideo] Missing shader AVProVideo/UI/AndroidOES");
-				}
+				Debug.LogWarning("[AVProVideo] Using DisplayUGUI with a Mask necessitates disabling YpCbCr mode on the MediaPlayer. Memory consumption will increase.");
+				_mediaPlayer.PlatformOptionsIOS.useYpCbCr420Textures = false;
 			}
 #endif
+
 			base.Awake();
 		}
+
+		private static bool HasMask(GameObject obj)
+		{
+			if (obj.GetComponent<Mask>() != null)
+				return true;
+			if (obj.transform.parent != null)
+				return HasMask(obj.transform.parent.gameObject);
+			return false;
+		}
+
+		private static Shader EnsureShader(Shader shader, string name)
+		{
+			if (shader == null)
+			{
+				shader = Shader.Find(name);
+				if (shader == null)
+				{
+					Debug.LogWarning("[AVProVideo] Missing shader " + name);
+				}
+			}
+
+			return shader;
+		}
+
+		private static Shader EnsureAlphaPackingShader()
+		{
+			_shaderAlphaPacking = EnsureShader(_shaderAlphaPacking, "AVProVideo/UI/Transparent Packed");
+			return _shaderAlphaPacking;
+		}
+
+		private static Shader EnsureStereoPackingShader()
+		{
+			_shaderStereoPacking = EnsureShader(_shaderStereoPacking, "AVProVideo/UI/Stereo");
+			return _shaderStereoPacking;
+		}
+
+#if REAL_ANDROID
+		private Shader EnsureAndroidOESShader()
+		{
+			_shaderAndroidOES = EnsureShader(_shaderAndroidOES, "AVProVideo/UI/AndroidOES");
+			return _shaderAndroidOES;
+		}
+#endif
 
 		protected override void Start()
 		{
 			_userMaterial = (this.m_Material != null);
-				
+			if (_userMaterial) {
+				_material = new Material(this.material);
+				this.material = _material;
+			}
+
 			base.Start();
 		}
 
@@ -180,7 +212,7 @@ namespace RenderHeads.Media.AVProVideo
 					break;
 				case StereoPacking.LeftRight:
 				case StereoPacking.TopBottom:
-					result = _shaderStereoPacking;
+					result = EnsureStereoPackingShader();
 					break;
 			}
 
@@ -190,7 +222,7 @@ namespace RenderHeads.Media.AVProVideo
 					break;
 				case AlphaPacking.LeftRight:
 				case AlphaPacking.TopBottom:
-					result = _shaderAlphaPacking;
+					result = EnsureAlphaPackingShader();
 					break;
 			}
 
@@ -199,19 +231,19 @@ namespace RenderHeads.Media.AVProVideo
 			{
 				if (QualitySettings.activeColorSpace == ColorSpace.Linear && !_mediaPlayer.Info.PlayerSupportsLinearColorSpace())
 				{
-					result = _shaderAlphaPacking;
+					result = EnsureAlphaPackingShader();
 				}
 			}
 #endif
 			if (result == null && _mediaPlayer.TextureProducer != null && _mediaPlayer.TextureProducer.GetTextureCount() == 2)
 			{
-				result = _shaderAlphaPacking;
+				result = EnsureAlphaPackingShader();
 			}
 
 #if REAL_ANDROID
 			if (_mediaPlayer.PlatformOptionsAndroid.useFastOesPath)
 			{
-				result = _shaderAndroidOES;
+				result = EnsureAndroidOESShader();
 			}
 #endif
 			return result;
@@ -373,7 +405,23 @@ namespace RenderHeads.Media.AVProVideo
 					Helper.SetupGammaMaterial(material, _mediaPlayer.Info.PlayerSupportsLinearColorSpace());
 				}
 #else
-				_propApplyGamma |= 0;
+				_propApplyGamma |= 0;	// Prevent compiler warning about unused variable
+#endif
+
+#if (!UNITY_EDITOR && UNITY_ANDROID)
+				// Adjust for cropping (when the decoder decodes in blocks that overrun the video frame size, it pads), OES only as we apply this lower down for none-OES
+				if (_mediaPlayer.PlatformOptionsAndroid.useFastOesPath && 
+					_mediaPlayer.Info != null && 
+					material.HasProperty(_propCroppingScalars) )
+				{
+					float[] transform = _mediaPlayer.Info.GetTextureTransform();
+					if (transform != null)
+					{
+						material.SetVector(_propCroppingScalars, new Vector4(transform[0], transform[3], 1.0f, 1.0f));
+					}
+				}
+#else
+				_propCroppingScalars |= 0;	// Prevent compiler warning about unused variable
 #endif
 			}
 		}
@@ -432,7 +480,7 @@ namespace RenderHeads.Media.AVProVideo
 
 				if (_mediaPlayer != null)
 				{
-#if UNITY_PLATFORM_SUPPORTS_VIDEOTRANSFORM
+#if UNITY_PLATFORM_SUPPORTS_VIDEOTRANSFORM && !REAL_ANDROID
 					if (_mediaPlayer.Info != null)
 					{
 						Orientation ori = Helper.GetOrientation(_mediaPlayer.Info.GetTextureTransform());
@@ -516,6 +564,7 @@ namespace RenderHeads.Media.AVProVideo
 				m = Helper.GetMatrixForOrientation(Helper.GetOrientation(_mediaPlayer.Info.GetTextureTransform()));
 			}
 #endif
+
 			vbo.Clear();
 
 			var vert = UIVertex.simpleVert;
@@ -578,7 +627,7 @@ namespace RenderHeads.Media.AVProVideo
 				var textureSize = new Vector2(mainTexture.width, mainTexture.height);
 				{
 					// Adjust textureSize based on orientation
-#if UNITY_PLATFORM_SUPPORTS_VIDEOTRANSFORM
+#if UNITY_PLATFORM_SUPPORTS_VIDEOTRANSFORM && !REAL_ANDROID
 					if (HasValidTexture())
 					{
 						Matrix4x4 m = Helper.GetMatrixForOrientation(Helper.GetOrientation(_mediaPlayer.Info.GetTextureTransform()));

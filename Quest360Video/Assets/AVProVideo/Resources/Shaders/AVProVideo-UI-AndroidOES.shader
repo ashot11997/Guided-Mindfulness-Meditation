@@ -14,6 +14,8 @@
 
 		_ColorMask("Color Mask", Float) = 15
 
+		_CroppingScalars("Cropping Scalars", Vector) = (1, 1, 1, 1)
+
 		[KeywordEnum(None, Top_Bottom, Left_Right)] Stereo("Stereo Mode", Float) = 0
 		[Toggle(STEREO_DEBUG)] _StereoDebug("Stereo Debug Tinting", Float) = 0
 		[Toggle(APPLY_GAMMA)] _ApplyGamma("Apply Gamma", Float) = 0
@@ -69,6 +71,7 @@
 #include "AVProVideo.cginc"
 	uniform mat4 _ViewMatrix;
 	uniform vec3 _cameraPosition;
+	uniform vec4 _CroppingScalars;
 	varying vec2 texVal;
 
 #if defined(STEREO_DEBUG)
@@ -80,6 +83,9 @@
 		gl_Position = XFormObjectToClip(gl_Vertex);
 		texVal = gl_MultiTexCoord0.xy;
 		texVal.y = 1.0 - texVal.y;
+
+		// Adjust for cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
+		texVal.xy *= _CroppingScalars.xy;
 
 #if defined(STEREO_TOP_BOTTOM) | defined(STEREO_LEFT_RIGHT)
 		bool isLeftEye = IsStereoEyeLeft(_cameraPosition, _ViewMatrix[0].xyz);
@@ -113,7 +119,7 @@
 #if defined(APPLY_GAMMA)
 	vec3 GammaToLinear(vec3 col)
 	{
-		return col * (col * (col * 0.305306011 + 0.682171111) + 0.012522878);
+		return pow(col, vec3(2.2, 2.2, 2.2));
 	}
 #endif
 

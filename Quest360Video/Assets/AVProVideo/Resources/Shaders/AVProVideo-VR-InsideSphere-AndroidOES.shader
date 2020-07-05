@@ -4,6 +4,7 @@
 	{
 		_MainTex ("Base (RGB)", 2D) = "black" {}
 		_Color("Color", Color) = (0.0, 1.0, 0.0, 1.0)
+		_CroppingScalars("Cropping Scalars", Vector) = (1, 1, 1, 1)
 		[KeywordEnum(None, Top_Bottom, Left_Right, Custom_UV)] Stereo("Stereo Mode", Float) = 0
 		[KeywordEnum(None, EquiRect180)] Layout("Layout", Float) = 0
 		[Toggle(STEREO_DEBUG)] _StereoDebug("Stereo Debug Tinting", Float) = 0
@@ -42,10 +43,11 @@
 
 		uniform vec3 _cameraPosition;
 		uniform mat4 _ViewMatrix;
+		uniform vec4 _CroppingScalars;
 
 #if defined(HIGH_QUALITY)
 		varying vec3 texNormal;
-	#if defined(STEREO_TOP_BOTTOM) | defined(STEREO_LEFT_RIGHT)
+	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
 		varying vec4 texScaleOffset;
 	#endif
 #else
@@ -58,9 +60,9 @@
 
 			/// @fix: explicit TRANSFORM_TEX(); Unity's preprocessor chokes when attempting to use the TRANSFORM_TEX() macro in UnityCG.glslinc
 			/// 	(as of Unity 4.5.0f6; issue dates back to 2011 or earlier: http://forum.unity3d.com/threads/glsl-transform_tex-and-tiling.93756/)
-			vec2 transformTex(vec4 texCoord, vec4 texST) 
+			vec2 transformTex(vec2 texCoord, vec4 texST) 
 			{
-				return (texCoord.xy * texST.xy + texST.zw);
+				return (texCoord * texST.xy + texST.zw);
 			}
 
 			void main()
@@ -69,19 +71,22 @@
 
 #if defined(HIGH_QUALITY)
 				texNormal = normalize(gl_Normal.xyz);
-	#if defined(STEREO_TOP_BOTTOM) | defined(STEREO_LEFT_RIGHT)
+	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
 				bool isLeftEye = IsStereoEyeLeft(_cameraPosition, _ViewMatrix[0].xyz);
 				texScaleOffset = GetStereoScaleOffset(isLeftEye, false);
 	#endif
 #else
 				texVal = gl_MultiTexCoord0.xy;
-				texVal = transformTex(gl_MultiTexCoord0, _MainTex_ST);
+				texVal = transformTex(gl_MultiTexCoord0.xy, _MainTex_ST);
 				texVal = vec2(1.0, 1.0) - texVal;
 	#if defined(LAYOUT_EQUIRECT180)
 				texVal.x = ((texVal.x - 0.5) * 2.0) + 0.5;
 	#endif
 
-	#if defined(STEREO_TOP_BOTTOM) | defined(STEREO_LEFT_RIGHT)
+				// Adjust for cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
+				texVal.xy *= _CroppingScalars.xy;
+
+	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
 				bool isLeftEye = IsStereoEyeLeft(_cameraPosition, _ViewMatrix[0].xyz);
 
 				vec4 scaleOffset = GetStereoScaleOffset(isLeftEye, false);
@@ -91,7 +96,7 @@
 	#elif defined (STEREO_CUSTOM_UV)
 				if (!IsStereoEyeLeft(_cameraPosition, _ViewMatrix[0].xyz))
 				{
-					texVal = transformTex(gl_MultiTexCoord1, _MainTex_ST);
+					texVal = transformTex(gl_MultiTexCoord1.xy, _MainTex_ST);
 					texVal = vec2(1.0, 1.0) - texVal;
 				}
 	#endif
@@ -110,7 +115,7 @@
 			precision highp float;
 	#endif
 			varying vec3 texNormal;
-	#if defined(STEREO_TOP_BOTTOM) | defined(STEREO_LEFT_RIGHT)
+	#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
 			varying vec4 texScaleOffset;
 	#endif
 #else
@@ -123,7 +128,7 @@
 #if defined(APPLY_GAMMA)
 			vec3 GammaToLinear(vec3 col)
 			{
-				return col * (col * (col * 0.305306011 + 0.682171111) + 0.012522878);
+				return pow(col, vec3(2.2, 2.2, 2.2));
 			}
 #endif
 
@@ -140,9 +145,9 @@
 
 			/// @fix: explicit TRANSFORM_TEX(); Unity's preprocessor chokes when attempting to use the TRANSFORM_TEX() macro in UnityCG.glslinc
 			/// 	(as of Unity 4.5.0f6; issue dates back to 2011 or earlier: http://forum.unity3d.com/threads/glsl-transform_tex-and-tiling.93756/)
-			vec2 transformTex(vec4 texCoord, vec4 texST) 
+			vec2 transformTex(vec2 texCoord, vec4 texST) 
 			{
-				return (texCoord.xy * texST.xy + texST.zw);
+				return (texCoord * texST.xy + texST.zw);
 			}
 
 			uniform vec4 _MainTex_ST;
@@ -150,7 +155,6 @@
 
 			uniform vec4 _Color;
 			uniform samplerExternalOES _MainTex;
-			
 
             void main()
             {
@@ -159,13 +163,17 @@
 #if defined(HIGH_QUALITY)
 				uv = NormalToEquiRect(normalize(texNormal));
 				uv.x += 0.75;
-				uv.x = mod(uv.x, 1.0);	
+				uv.x = mod(uv.x, 1.0);
 				uv = transformTex(uv, _MainTex_ST);
 				
 	#if defined(LAYOUT_EQUIRECT180)
 				uv.x = ((uv.x - 0.5) * 2.0) + 0.5;
 	#endif
-	#if defined(STEREO_TOP_BOTTOM) | defined(STEREO_LEFT_RIGHT)
+
+				// Adjust for cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
+				uv.xy *= _CroppingScalars.xy;
+
+#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
 				uv.xy *= texScaleOffset.xy;
 				uv.xy += texScaleOffset.zw;
 	#endif

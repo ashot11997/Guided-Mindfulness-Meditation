@@ -5,6 +5,7 @@
 		_MainTex ("Base (RGB)", 2D) = "black" {}
 		_ChromaTex("Chroma", 2D) = "gray" {}
 		_Color("Main Color", Color) = (1,1,1,1)
+		_CroppingScalars("Cropping Scalars", Vector) = (1, 1, 1, 1)
 
 		[KeywordEnum(None, Top_Bottom, Left_Right)] Stereo("Stereo Mode", Float) = 0
 		[Toggle(APPLY_GAMMA)] _ApplyGamma("Apply Gamma", Float) = 0
@@ -36,6 +37,7 @@
 		
 			varying vec2 texVal;
 			uniform vec4 _MainTex_ST;
+			uniform vec4 _CroppingScalars;
 
 			/// @fix: explicit TRANSFORM_TEX(); Unity's preprocessor chokes when attempting to use the TRANSFORM_TEX() macro in UnityCG.glslinc
 			/// 	(as of Unity 4.5.0f6; issue dates back to 2011 or earlier: http://forum.unity3d.com/threads/glsl-transform_tex-and-tiling.93756/)
@@ -50,7 +52,10 @@
 				texVal = transformTex(gl_MultiTexCoord0, _MainTex_ST);
 				//texVal.x = 1.0 - texVal.x;
 				texVal.y = 1.0 - texVal.y;
-            }
+
+				// Adjust for cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
+				texVal.xy *= _CroppingScalars.xy;
+			}
             #endif  
 
 			#ifdef FRAGMENT
@@ -60,7 +65,7 @@
 #if defined(APPLY_GAMMA)
 			vec3 GammaToLinear(vec3 col)
 			{
-				return col * (col * (col * 0.305306011 + 0.682171111) + 0.012522878);
+				return pow(col, vec3(2.2, 2.2, 2.2));
 			}
 #endif			
 

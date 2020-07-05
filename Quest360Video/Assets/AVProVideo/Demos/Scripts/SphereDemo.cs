@@ -5,7 +5,7 @@
 using UnityEngine;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo.Demos
@@ -45,7 +45,10 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			if (SystemInfo.supportsGyroscope)
 			{
 				Input.gyro.enabled = true;
-				this.transform.parent.Rotate(new Vector3(90f, 0f, 0f));
+				if (this.transform.parent != null)
+				{
+					this.transform.parent.Rotate(new Vector3(90f, 0f, 0f));
+				}
 			}
 		}
 
@@ -65,7 +68,11 @@ namespace RenderHeads.Media.AVProVideo.Demos
 				// Mouse click translates to gear VR touch to reset view
 				if (_allowRecenter && (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)))
 				{
+					#if UNITY_2019_3_OR_NEWER
+					// TODO: should be using XRInputSubsystem.TryRecenter();
+					#else
 					UnityEngine.XR.InputTracking.Recenter();
+					#endif
 				}
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
 				if (_allowVrToggle && Input.GetKeyDown(KeyCode.V))

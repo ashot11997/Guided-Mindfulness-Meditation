@@ -12,7 +12,7 @@
 using UnityEngine;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -25,7 +25,7 @@ namespace RenderHeads.Media.AVProVideo
 	//[ExecuteInEditMode]
 	[AddComponentMenu("AVPro Video/Cubemap Cube (VR)", 400)]
 #if UNITY_HELPATTRIB
-	[HelpURL("http://renderheads.com/product/avpro-video/")]
+	[HelpURL("http://renderheads.com/products/avpro-video/")]
 #endif
 	public class CubemapCube : MonoBehaviour
 	{
@@ -56,7 +56,8 @@ namespace RenderHeads.Media.AVProVideo
 		private int _textureWidth;
 		private int _textureHeight;
 		private static int _propApplyGamma;
-
+		private static int _propStereo;
+		
 		private static int _propUseYpCbCr;
 		private const string PropChromaTexName = "_ChromaTex";
 		private static int _propChromaTex;
@@ -72,6 +73,10 @@ namespace RenderHeads.Media.AVProVideo
 
 		void Awake()
 		{
+			if (_propStereo == 0)
+			{
+				_propStereo = Shader.PropertyToID("Stereo");
+			}
 			if (_propApplyGamma == 0)
 			{
 				_propApplyGamma = Shader.PropertyToID("_ApplyGamma");
@@ -164,6 +169,12 @@ namespace RenderHeads.Media.AVProVideo
 							Helper.SetupGammaMaterial(_renderer.material, _mediaPlayer.Info.PlayerSupportsLinearColorSpace());
 						}
 #endif
+						// Apply changes for stereo videos
+						if (_renderer.material.HasProperty(_propStereo))
+						{
+							Helper.SetupStereoMaterial(_renderer.material, _mediaPlayer.m_StereoPacking, _mediaPlayer.m_DisplayDebugStereoColorTint);
+						}
+
 						if (_renderer.material.HasProperty(_propUseYpCbCr) && _mediaPlayer.TextureProducer.GetTextureCount() == 2)
 						{
 							_renderer.material.EnableKeyword("USE_YPCBCR");

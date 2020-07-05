@@ -14,7 +14,7 @@ using Windows.Storage.Streams;
 #endif
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
@@ -32,10 +32,10 @@ namespace RenderHeads.Media.AVProVideo
 			Closing,			// Triggered when the media is closed
 			Error,				// Triggered when an error occurs
 			SubtitleChange,		// Triggered when the subtitles change
-			Stalled,			// Triggered when media is stalled (eg. when lost connection to media stream) - Currently only suported on Windows platforms
+			Stalled,			// Triggered when media is stalled (eg. when lost connection to media stream) - Currently only supported on Windows platforms
 			Unstalled,			// Triggered when media is resumed form a stalled state (eg. when lost connection is re-established)
 			ResolutionChanged,	// Triggered when the resolution of the video has changed (including the load) Useful for adaptive streams
-			StartedSeeking,		// Triggered whhen seeking begins
+			StartedSeeking,		// Triggered when seeking begins
 			FinishedSeeking,    // Triggered when seeking has finished
 			StartedBuffering,	// Triggered when buffering begins
 			FinishedBuffering,	// Triggered when buffering has finished
@@ -72,6 +72,12 @@ namespace RenderHeads.Media.AVProVideo
 				_listeners.RemoveAt(index);
 				base.RemoveListener(call);
 			}
+		}
+
+		new public void RemoveAllListeners()
+		{
+			_listeners.Clear();
+			base.RemoveAllListeners();
 		}
 	}
 
@@ -141,6 +147,9 @@ namespace RenderHeads.Media.AVProVideo
 		/// </summary>
 		void	SeekWithTolerance(float timeMs, float beforeMs, float afterMs);
 
+		/// <summary>
+		/// Returns the current video time in milliseconds
+		/// </summary>
 		float	GetCurrentTimeMs();
 
 		/// <summary>
@@ -294,7 +303,7 @@ namespace RenderHeads.Media.AVProVideo
 		///		"MF-MediaEngine-Software" - uses the Windows 8.1 features of the Microsoft Media Foundation API, but software decoding
 		///		"MF-MediaEngine-Hardware" - uses the Windows 8.1 features of the Microsoft Media Foundation API, but GPU decoding
 		///	Android has "MediaPlayer" and "ExoPlayer"
-		///	macOS / tvOS / iOS just has "AVfoundation"
+		///	macOS / tvOS / iOS just has "AVFoundation"
 		/// </summary>
 		string GetPlayerDescription();
 
@@ -527,7 +536,7 @@ namespace RenderHeads.Media.AVProVideo
 
 	public static class Helper
 	{
-		public const string ScriptVersion = "1.9.10";
+		public const string ScriptVersion = "1.11.2";
 
 		public static string GetName(Platform platform)
 		{
@@ -657,6 +666,7 @@ namespace RenderHeads.Media.AVProVideo
 			Orientation result = Orientation.Landscape;
 			if (t != null)
 			{
+				// TODO: check that the Portrait and PortraitFlipped are the right way around
 				if (t[0] == 0f && t[1]== 1f && t[2] == -1f && t[3] == 0f)
 				{
 					result = Orientation.Portrait;
@@ -680,6 +690,7 @@ namespace RenderHeads.Media.AVProVideo
 		public static Matrix4x4 GetMatrixForOrientation(Orientation ori)
 		{
 			// TODO: cache these matrices
+			// TODO: check that -90 is correct, perhaps Portrait and PortraitFlipped are the wrong way around - need to check on iOS
 			Matrix4x4 portrait = Matrix4x4.TRS(new Vector3(0f, 1f, 0f), Quaternion.Euler(0f, 0f, -90f), Vector3.one);
 			Matrix4x4 portraitFlipped = Matrix4x4.TRS(new Vector3(1f, 0f, 0f), Quaternion.Euler(0f, 0f, 90f), Vector3.one);
 			Matrix4x4 landscapeFlipped = Matrix4x4.TRS(new Vector3(1f, 1f, 0f), Quaternion.identity, new Vector3(-1f, -1f, 1f));
@@ -806,17 +817,26 @@ namespace RenderHeads.Media.AVProVideo
 
 		public static int ConvertTimeSecondsToFrame(float seconds, float frameRate)
 		{
+			// NOTE: Generally you should use RountToInt when converting from time to frame number
+			// but because we're adding a half frame offset we need to FloorToInt
+			seconds = Mathf.Max(0f, seconds);
+			frameRate = Mathf.Max(0f, frameRate);
 			return Mathf.FloorToInt(frameRate * seconds);
 		}
 
 		public static float ConvertFrameToTimeSeconds(int frame, float frameRate)
 		{
+			frame = Mathf.Max(0, frame);
+			frameRate = Mathf.Max(0f, frameRate);
 			float frameDurationSeconds = 1f / frameRate;
 			return ((float)frame * frameDurationSeconds) + (frameDurationSeconds * 0.5f);		// Add half a frame we that the time lands in the middle of the frame range and not at the edges
 		}
 
 		public static float FindNextKeyFrameTimeSeconds(float seconds, float frameRate, int keyFrameInterval)
 		{
+			seconds = Mathf.Max(0, seconds);
+			frameRate = Mathf.Max(0f, frameRate);
+			keyFrameInterval = Mathf.Max(0, keyFrameInterval);
 			int currentFrame = Helper.ConvertTimeSecondsToFrame(seconds, frameRate);
 			// TODO: allow specifying a minimum number of frames so that if currentFrame is too close to nextKeyFrame, it will calculate the next-next keyframe
 			int nextKeyFrame = keyFrameInterval * Mathf.CeilToInt((float)(currentFrame + 1) / (float)keyFrameInterval);

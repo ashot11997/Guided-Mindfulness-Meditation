@@ -3,13 +3,13 @@ using UnityEngine;
 using System;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
 {
 	/// <summary>
-	/// A singleton to handle mulitple instances of the AudioOutput component
+	/// A singleton to handle multiple instances of the AudioOutput component
 	/// </summary>
 	public class AudioOutputManager
 	{

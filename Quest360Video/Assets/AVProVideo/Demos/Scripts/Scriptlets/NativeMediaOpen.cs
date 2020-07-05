@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 #endif
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2018 RenderHeads Ltd.  All rights reserverd.
+// Copyright 2015-2020 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo.Demos
@@ -24,7 +24,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 	public class NativeMediaOpen : MonoBehaviour
 	{
 		[SerializeField]
-		private MediaPlayer _player;
+		private MediaPlayer _player = null;
 
 #if NETFX_CORE
 		private FileOpenPicker _picker;

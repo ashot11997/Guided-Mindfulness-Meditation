@@ -79,6 +79,7 @@
     <Compile Include="Assets\AVProVideo\Demos\Scripts\VCR.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Components\ApplyToMaterial.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Components\ApplyToMesh.cs" />
+    <Compile Include="Assets\AVProVideo\Scripts\Components\AudioChannelMixer.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Components\AudioOutput.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Components\CubemapCube.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Components\DebugOverlay.cs" />
@@ -296,6 +297,7 @@
     <None Include="Assets\Oculus\SampleFramework\license.txt" />
     <None Include="Assets\AVProVideo\Resources\Shaders\AVProVideo-Background-FullScreen.shader" />
     <None Include="Assets\Oculus\Avatar\Resources\Materials\Version1.5\Avatar_Mobile_CombinedMesh.shader" />
+    <None Include="Assets\AVProVideo\Resources\Shaders\AVProVideo-Skybox-Cube3x2.shader" />
     <None Include="Assets\Oculus\Avatar\Resources\Materials\Expressive\Avatar_Mobile_CombinedMeshExpressive.shader" />
     <None Include="Assets\AVProVideo\Resources\Shaders\AVProVideo-UI-AndroidOES.shader" />
     <None Include="Assets\Oculus\SampleFramework\Usage\HandsTrainExample\Shaders\OculusSampleTrainSmokeShader.shader" />
@@ -319,6 +321,7 @@
     <None Include="Assets\Oculus\Avatar\Resources\Materials\AvatarMaterialStateShader.cginc" />
     <None Include="Assets\Oculus\Avatar\Resources\Materials\Expressive\AvatarEyeLens.shader" />
     <None Include="Assets\Oculus\Avatar\Resources\Materials\AvatarSurfaceShader.shader" />
+    <None Include="Assets\AVProVideo\Resources\Shaders\AVProVideo-Skybox-Sphere.shader" />
     <None Include="Assets\Oculus\SampleFramework\Core\Video\Plugins\Android\Audio360\NOTICE.txt" />
     <None Include="Assets\Oculus\SampleFramework\Usage\DistanceGrab\Materials\ToyCubeWithOutline.shader" />
     <None Include="Assets\Oculus\SampleFramework\Usage\HandsTrainExample\Shaders\OculusSampleTrainPropsShader.shader" />
