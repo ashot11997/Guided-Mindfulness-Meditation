@@ -15,7 +15,7 @@ public class VideoThumbnailContainer : MonoBehaviour
 
     public GameObject LoadingBar;
 
-    public Image FillingBar;
+    public Slider FillingBar;
 
     private LargeFileDownloaderExample VideoDownloader;
 

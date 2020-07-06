@@ -88,11 +88,11 @@ public class LargeFileDownloaderExample : MonoBehaviour {
 
     private bool IsStartedDownloading = false;
     private Text CurrentPercentageText;
-    private Image CurrentFillingBar;
+    private Slider CurrentFillingBar;
 
     private VideoThumbnailContainer CurrentVideoThumbnail;
 
-    public void DownloadVideo(int id, Text percentageText, Image Fillingbar, GameObject LoadingBar, VideoThumbnailContainer VideoThumbnail) {
+    public void DownloadVideo(int id, Text percentageText, Slider Fillingbar, GameObject LoadingBar, VideoThumbnailContainer VideoThumbnail) {
         int newId = id - 1;
         CurrentPercentageText = percentageText;
         CurrentFillingBar = Fillingbar;
@@ -109,9 +109,7 @@ public class LargeFileDownloaderExample : MonoBehaviour {
         if (IsStartedDownloading)
         {
             CurrentPercentageText.text = evt.progress.ToString() + " %";
-            CurrentFillingBar.fillAmount += (evt.progress / 100);
-
-            Debug.LogError(evt.progress);
+            CurrentFillingBar.value = evt.progress;
 
             if (evt.progress == 100)
             {
