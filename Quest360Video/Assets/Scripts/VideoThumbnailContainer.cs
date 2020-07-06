@@ -84,9 +84,10 @@ public class VideoThumbnailContainer : MonoBehaviour
     }
 
     public IEnumerator VideoDownloaded(string path) {
-        Debug.LogError("Video Successfully Downloaded");
+        Debug.Log("Video Successfully Downloaded");
 
         PlayerPrefs.SetInt("Downloaded" + ID, 1);
+        DownloadBtn.gameObject.tag = "ThisBtn";
         BlockingSystem.ShowButtons();
         Path = path;
         isDownloaded = true;

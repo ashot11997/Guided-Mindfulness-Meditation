@@ -10,13 +10,17 @@ public class DownloadBlockingSystem : MonoBehaviour
     public void ShowButtons() {
         foreach (var item in DownloadButtons)
         {
-            item.interactable = true;
+            if (item.gameObject.tag != "ThisBtn")
+            {
+                item.interactable = true;
+            }
         }
     }
     public void HideButtons()
     {
         foreach (var item in DownloadButtons)
         {
+            
             item.interactable = false;
         }
     }
