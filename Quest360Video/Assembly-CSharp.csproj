@@ -109,6 +109,7 @@
     <Compile Include="Assets\AVProVideo\Scripts\Internal\Stream.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Internal\WebGLMediaPlayer.cs" />
     <Compile Include="Assets\AVProVideo\Scripts\Internal\WindowsMediaPlayer.cs" />
+    <Compile Include="Assets\LargeFileDownloader\Example\LargeFileDownloaderExample.cs" />
     <Compile Include="Assets\Oculus\AudioManager\Scenes\Scripts\TestScript.cs" />
     <Compile Include="Assets\Oculus\AudioManager\Scripts\Audio\AmbienceEmitter.cs" />
     <Compile Include="Assets\Oculus\AudioManager\Scripts\Audio\AudioManager.cs" />
@@ -266,6 +267,7 @@
     <Compile Include="Assets\Oculus\Spatializer\scripts\ONSPPropagationSettings.cs" />
     <Compile Include="Assets\Oculus\Spatializer\scripts\ONSPSettings.cs" />
     <Compile Include="Assets\Oculus\Spatializer\scripts\ONSPVersion.cs" />
+    <Compile Include="Assets\Scripts\VideoThumbnailContainer.cs" />
     <None Include="Assets\Oculus\SampleFramework\Usage\OVROverlayCanvas\Shaders\UI Prerendered Opaque.shader" />
     <None Include="Assets\AVProVideo\Resources\Shaders\AVProVideo-Lit-Diffuse.shader" />
     <None Include="Assets\AVProVideo\Resources\Shaders\AVProVideo-UI-Default-Stereo.shader" />
@@ -547,6 +549,9 @@
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>C:/MyUnityProjects/Meditation_Quest/Quest360Video/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Tracker.dll</HintPath>
+    </Reference>
+    <Reference Include="LargeFileDownloaderLib">
+      <HintPath>C:/MyUnityProjects/Meditation_Quest/Quest360Video/Assets/LargeFileDownloader/Plugins/LargeFileDownloaderLib.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2018.4.13f1/Editor/Data/NetStandard/ref/2.0.0/netstandard.dll</HintPath>
