@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class VideoThumbnailContainer : MonoBehaviour
 {
     public Button DownloadBtn;
     public Button StreamBtn;
+
+    public DownloadBlockingSystem BlockingSystem;
 
     private int ID;
     private bool isDownloaded;
@@ -19,13 +22,17 @@ public class VideoThumbnailContainer : MonoBehaviour
 
     private LargeFileDownloaderExample VideoDownloader;
 
+    private string Path;
+
     void Awake()
     {
         DownloadBtn.onClick.AddListener(DownloadVideo);
+        StreamBtn.onClick.AddListener(StreamVideo);
     }
 
     void Start()
     {
+        //PlayerPrefs.DeleteAll();
         Text text = GetComponentInChildren<Text>();
         if (text != null)
         {
@@ -43,7 +50,7 @@ public class VideoThumbnailContainer : MonoBehaviour
         LoadingBar.SetActive(false);
         DownloadBtn.gameObject.SetActive(true);
 
-        /*if (PlayerPrefs.GetInt("downloaded") == 0 || PlayerPrefs.GetInt("downloaded") == null)
+        if (PlayerPrefs.GetInt("Downloaded" + ID) == 0 || PlayerPrefs.GetInt("Downloaded" + ID) == null)
         {
             StreamBtn.interactable = false;
             DownloadBtn.interactable = true;
@@ -52,11 +59,12 @@ public class VideoThumbnailContainer : MonoBehaviour
         {
             StreamBtn.interactable = true;
             DownloadBtn.interactable = false;
-        }*/
+        }
     }
 
     public void Setup(int id) {
         ID = id;
+        
     }
 
     public void Downloaded() {
@@ -66,12 +74,26 @@ public class VideoThumbnailContainer : MonoBehaviour
 
     void DownloadVideo() {
         Debug.Log("Starting " + ID + " Video");
+        BlockingSystem.HideButtons();
         VideoDownloader.DownloadVideo(ID, percentageText, FillingBar, LoadingBar, this);
     }
 
-    public void VideoDownloaded() {
-        isDownloaded = true;
-        Debug.LogError("Video Successfully Downloaded");
+    void StreamVideo() {
+        PlayerPrefs.SetInt("ID", ID);
+        SceneManager.LoadScene("VideoScene");
     }
 
+    public IEnumerator VideoDownloaded(string path) {
+        Debug.LogError("Video Successfully Downloaded");
+
+        PlayerPrefs.SetInt("Downloaded" + ID, 1);
+        BlockingSystem.ShowButtons();
+        Path = path;
+        isDownloaded = true;
+        LoadingBar.SetActive(false);
+        StreamBtn.interactable = true;
+
+        yield return new WaitForSeconds(0.5f);
+        DownloadBtn.interactable = false;
+    }
 }

@@ -92,6 +92,8 @@ public class LargeFileDownloaderExample : MonoBehaviour {
 
     private VideoThumbnailContainer CurrentVideoThumbnail;
 
+    private string pathToSave;
+
     public void DownloadVideo(int id, Text percentageText, Slider Fillingbar, GameObject LoadingBar, VideoThumbnailContainer VideoThumbnail) {
         int newId = id - 1;
         CurrentPercentageText = percentageText;
@@ -100,7 +102,7 @@ public class LargeFileDownloaderExample : MonoBehaviour {
         CurrentVideoThumbnail = VideoThumbnail;
 
         IsStartedDownloading = true;
-        string pathToSave = System.IO.Path.Combine(Application.persistentDataPath, System.IO.Path.GetFileName(VideoURLs[newId]));
+        pathToSave = System.IO.Path.Combine(Application.persistentDataPath, System.IO.Path.GetFileName(VideoURLs[newId]));
         downloader.Download(VideoURLs[newId], pathToSave);
     }
 
@@ -113,7 +115,7 @@ public class LargeFileDownloaderExample : MonoBehaviour {
 
             if (evt.progress == 100)
             {
-                CurrentVideoThumbnail.VideoDownloaded();
+                StartCoroutine(CurrentVideoThumbnail.VideoDownloaded(pathToSave));
                 IsStartedDownloading = false;
             }
         }

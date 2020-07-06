@@ -239,6 +239,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 634417741}
   StreamBtn: {fileID: 1908029335}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 249236438}
   LoadingBar: {fileID: 1590957644}
   FillingBar: {fileID: 1285218853}
@@ -735,6 +736,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 1329166985}
   StreamBtn: {fileID: 591099870}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 491334540}
   LoadingBar: {fileID: 1856410608}
   FillingBar: {fileID: 1233562518}
@@ -870,6 +872,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 747314024}
   StreamBtn: {fileID: 627785967}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 466730370}
   LoadingBar: {fileID: 1912692241}
   FillingBar: {fileID: 1984495271}
@@ -2407,6 +2410,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 1873050151}
   StreamBtn: {fileID: 1346570456}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 944027682}
   LoadingBar: {fileID: 1775858615}
   FillingBar: {fileID: 1126118555}
@@ -4531,6 +4535,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 822266178}
   m_CullTransparentMesh: 0
+--- !u!1 &822924962
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 822924963}
+  - component: {fileID: 822924964}
+  m_Layer: 0
+  m_Name: DownloadBlockingSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &822924963
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822924962}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &822924964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822924962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3444676c9cf165843bad3928d28dad11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DownloadButtons:
+  - {fileID: 1569367282}
+  - {fileID: 1374220378}
+  - {fileID: 778442494}
+  - {fileID: 634417741}
+  - {fileID: 1297663844}
+  - {fileID: 1873050151}
+  - {fileID: 747314024}
+  - {fileID: 1788388590}
+  - {fileID: 1329166985}
+  - {fileID: 876095646}
 --- !u!1 &846625118
 GameObject:
   m_ObjectHideFlags: 0
@@ -5173,6 +5231,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 1297663844}
   StreamBtn: {fileID: 749749651}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 901003512}
   LoadingBar: {fileID: 1815013666}
   FillingBar: {fileID: 1280044544}
@@ -5930,6 +5989,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 1374220378}
   StreamBtn: {fileID: 1330063156}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 633203803}
   LoadingBar: {fileID: 270048380}
   FillingBar: {fileID: 2073032006}
@@ -8313,6 +8373,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 778442494}
   StreamBtn: {fileID: 1723077733}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 300945039}
   LoadingBar: {fileID: 2137434183}
   FillingBar: {fileID: 1582502811}
@@ -8371,6 +8432,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 1569367282}
   StreamBtn: {fileID: 1353721640}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 1607983723}
   LoadingBar: {fileID: 199508492}
   FillingBar: {fileID: 749640351}
@@ -8697,6 +8759,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 1788388590}
   StreamBtn: {fileID: 1067227735}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 822266180}
   LoadingBar: {fileID: 1078825884}
   FillingBar: {fileID: 1726686464}
@@ -10489,6 +10552,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DownloadBtn: {fileID: 876095646}
   StreamBtn: {fileID: 1247485106}
+  BlockingSystem: {fileID: 822924964}
   percentageText: {fileID: 1416204914}
   LoadingBar: {fileID: 317570679}
   FillingBar: {fileID: 1334357987}
