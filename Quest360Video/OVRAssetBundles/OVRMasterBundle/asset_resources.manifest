@@ -1,0 +1,83 @@
+ManifestFileVersion: 0
+CRC: 3289976023
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 92357633707e6e17cdd73ae264f1047f
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: cdee45e45e9621ba0c6cd363edbdcb9b
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 109
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: ad074644ff568a14187a3690cfbd7534, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: 20553fac56ec59645857c0732b787431, type: 3}
+- Class: 114
+  Script: {fileID: 11500000, guid: cd7bb81df5b74b34dadbf531f381a26b, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+Assets:
+- Assets/Oculus/Avatar/Resources/FallbackTextures/fallback_diffuse_roughness_2048.png
+- Assets/Oculus/Avatar/Resources/FallbackTextures/fallback_diffuse_roughness_256.png
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Lit-Diffuse.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-UI-Default-Stereo.shader
+- Assets/Oculus/Avatar/Resources/Materials/Version1.5/Avatar_PC_SingleComponent.shader
+- Assets/Oculus/VR/Resources/OVRMRUnlitTransparent.shader
+- Assets/Oculus/Avatar/Resources/FallbackTextures/fallback_normal_2048.png
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-VR-InsideSphere-StereoUV.shader
+- Assets/Oculus/VR/Resources/OVRMRChromaKey.cginc
+- Assets/Resources/ONSPSettings.asset
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Unlit-Transparent.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo.cginc
+- Assets/Oculus/Avatar/Resources/Materials/Version1.5/Avatar_Mobile_Loader.shader
+- Assets/Resources/OVRBuildConfig.asset
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Unlit-AndroidOES.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-IMGUI-Transparent.shader
+- Assets/Oculus/VR/Resources/Cubemap Blit.shader
+- Assets/Oculus/VR/Resources/OVRMRUnlit.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Background-FullScreenTransparent.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-VR-InsideSphere-AndroidOES.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-VR-InsideSphere.shader
+- Assets/Oculus/Avatar/Resources/Materials/AvatarSurfaceShaderSelfOccluding.shader
+- Assets/Oculus/VR/Resources/Unlit Transparent Color.shader
+- Assets/Oculus/Avatar/Resources/Materials/AvatarSurfaceShaderPBS.shader
+- Assets/Oculus/VR/Resources/OVRMRCameraFrameLit.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Background-FullScreen.shader
+- Assets/Oculus/Avatar/Resources/Materials/Version1.5/Avatar_Mobile_CombinedMesh.shader
+- Assets/AVProVideo/Resources/AVPro1.png
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Skybox-Cube3x2.shader
+- Assets/Oculus/Avatar/Resources/Materials/Expressive/Avatar_Mobile_CombinedMeshExpressive.shader
+- Assets/AVProVideo/Resources/AVPro.png
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-UI-AndroidOES.shader
+- Assets/Oculus/VR/Resources/Underlay Transparent Occluder.shader
+- Assets/Oculus/VR/Resources/Texture2D Blit.shader
+- Assets/Oculus/Avatar/Resources/Materials/Expressive/Avatar_PC_SingleComponentExpressive.shader
+- Assets/Oculus/Avatar/Resources/Materials/AvatarPBRV2Simple.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Helper-Transition.shader
+- Assets/AVProVideo/Resources/AVProVideoIcon.png
+- Assets/Oculus/Avatar/Resources/FallbackTextures/fallback_normal_256.png
+- Assets/Resources/OVRPlatformToolSettings.asset
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-VR-InsideSphere-Transparent.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-UI-Default-Transparent.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-BlendFrames.shader
+- Assets/Oculus/Avatar/Resources/Materials/Expressive/Avatar_Mobile_SingleComponentExpressive.shader
+- Assets/Oculus/VR/Resources/OVRMRCameraFrame.shader
+- Assets/Oculus/Avatar/Resources/Materials/AvatarSurfaceShaderPBSV2.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Unlit.shader
+- Assets/Oculus/Avatar/Resources/FallbackTextures/fallback_diffuse_roughness_1024.png
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Lit-Transparent-Diffuse.shader
+- Assets/Oculus/Avatar/Resources/Materials/Version1.5/Avatar_Mobile_SingleComponent.shader
+- Assets/Oculus/Avatar/Resources/Materials/AvatarMaterialStateShader.cginc
+- Assets/Oculus/Avatar/Resources/Materials/Expressive/AvatarEyeLens.shader
+- Assets/Oculus/Avatar/Resources/Materials/AvatarSurfaceShader.shader
+- Assets/AVProVideo/Resources/Shaders/AVProVideo-Skybox-Sphere.shader
+- Assets/Oculus/Avatar/Resources/FallbackTextures/fallback_normal_1024.tif
+- Assets/Oculus/VR/Resources/Underlay Impostor.shader
+Dependencies: []

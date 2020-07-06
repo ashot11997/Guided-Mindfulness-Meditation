@@ -83,6 +83,8 @@ d3c76b14a25eebd3a3323dd43297919c Unity.TextMeshPro.dll:TMPro.TMP_InputField
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:OculusSampleFramework.PauseOnInputLoss
 07bbff34ca5d14ed9bffb0376c5ede5f Assembly-CSharp.dll:.GuardianBoundaryEnforcer
 36ae7cc3e989c6df9341b63a0b042603 Oculus.Platform.dll:Oculus.Platform.Samples.VrBoardGame.BoardPosition
+71bb6a6b6c8f052f948db64c7dd3ca4f UnityEngine.Advertisements.dll:UnityEngine.Advertisements.CallbackExecutor
+71bb6a6b6c8f052f948db64c7dd3ca4f UnityEngine.Advertisements.dll:UnityEngine.Advertisements.Editor.Placeholder
 cf9f5cf2c3145a37ac07f00e50e460f9 UnityEngine.UI.dll:UnityEngine.UI.AspectRatioFitter
 71bb6a6b6c8f052f948db64c7dd3ca4f UnityEngine.UI.dll:UnityEngine.EventSystems.BaseInput
 507174d46dacbc5fe45e28485db5dd1e UnityEngine.UI.dll:UnityEngine.UI.Button
@@ -344,6 +346,7 @@ d251bf88db6c95a6b1aa0b69298da9ef UnityEngine.SpatialTracking.dll:UnityEngine.Spa
 d7af9ec50dcb749fd86f8334213aec2d Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.Demos.SimpleController
 3ee02cb1316a8b9b737b50080589b055 Assembly-CSharp.dll:.DownloadBlockingSystem
 34c971ccf5a4d4c276f7753251cba95d Oculus.VR.dll:.OVRGridCube
+b00ce1f32326f1cd1160488ffd14965a Oculus.VR.Editor.dll:.OVRConfig
 8b9f42d72019bde2f9fe0667762eaff3 Assembly-CSharp.dll:.OvrAvatarSkinnedMeshRenderComponent
 57bbc7ecf7a22767c1b9015689b1da78 Assembly-CSharp.dll:OculusSampleFramework.CowController
 8b751ea9ac08c048355865b722865681 Assembly-CSharp.dll:OculusSampleFramework.PanelHMDFollower

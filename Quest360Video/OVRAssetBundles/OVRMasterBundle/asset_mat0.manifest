@@ -1,0 +1,23 @@
+ManifestFileVersion: 0
+CRC: 4154729798
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 279df1978ee0a2ba96a884d4fa9ce460
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: fe397485c3cec1106b49e9ff95e8f8a2
+HashAppended: 0
+ClassTypes:
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+Assets:
+- Assets/Oculus/VR/Materials/GazePointer.mat
+- Assets/AVProVideo/Materials/sphere360.mat
+Dependencies:
+- C:/MyUnityProjects/Meditation_Quest/Quest360Video/OVRAssetBundles/OVRMasterBundle/asset_resources
+- C:/MyUnityProjects/Meditation_Quest/Quest360Video/OVRAssetBundles/OVRMasterBundle/asset_png0

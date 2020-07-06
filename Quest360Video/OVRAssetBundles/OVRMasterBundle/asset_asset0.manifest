@@ -1,0 +1,16 @@
+ManifestFileVersion: 0
+CRC: 1323482947
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: aa7a4357e1579f600d538f7cbd6fb1fe
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 22d79a0a65c6305de56ce253448902ac
+HashAppended: 0
+ClassTypes:
+- Class: 43
+  Script: {instanceID: 0}
+Assets:
+- Assets/AVProVideo/Demos/Materials/OctahedronSphere.asset
+Dependencies: []
