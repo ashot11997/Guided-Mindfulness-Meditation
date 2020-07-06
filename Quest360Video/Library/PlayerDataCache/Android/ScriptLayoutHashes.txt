@@ -2,7 +2,7 @@ Android
 PlayerPath?
 C:/Users/Editor 1/Downloads/App.apk
 SceneListBegin?
-Assets/AVProVideo/Demos/Scenes/08_Demo_360SphereVideo.unity
+Assets/Scenes/MainMenu.unity
 Assets/Scenes/VideoScene.unity
 SceneListEnd?
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.ONSPVersion
@@ -76,6 +76,7 @@ aa165095bcf0f4d99594ea33df01c81b UnityEngine.UI.dll:UnityEngine.UI.Slider
 0fd6822f6177297bd0eb4d83cc7a9030 UnityEngine.UI.dll:UnityEngine.UI.ToggleGroup
 abf1930d8126d0b2e00e9449129a0190 UnityEngine.UI.dll:UnityEngine.EventSystems.TouchInputModule
 64e54c0cbb0177c5ea26f340efb9ff85 UnityEngine.UI.dll:UnityEngine.UI.VerticalLayoutGroup
+19daab6d3e6705675f1ac1b5e44f230d Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.AudioChannelMixer
 b3bb7c40cede9849e7814d6093dcfcea Oculus.VR.dll:.OVRRaycaster
 d3c76b14a25eebd3a3323dd43297919c Unity.TextMeshPro.dll:TMPro.TMP_InputField
 7ffa5a0944fe3f23d99ec567ae7ae898 Assembly-CSharp.dll:.CharacterCameraConstraint
@@ -381,4 +382,7 @@ cd06391f9225499fb9ea605ab668b015 Oculus.Platform.dll:Oculus.Platform.Samples.VrH
 a8870609d5ff474352f315eba63aaa8b Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.Demos.FrameExtract
 71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.DebugUISample
 18235af34262c9d1c806370a73196694 Assembly-CSharp.dll:OculusSampleFramework.ButtonController
-19daab6d3e6705675f1ac1b5e44f230d Assembly-CSharp.dll:RenderHeads.Media.AVProVideo.AudioChannelMixer
+ec32bf6bfc4b508c6cd04ab7652754bc Assembly-CSharp.dll:.VideoThumbnailContainer
+71bb6a6b6c8f052f948db64c7dd3ca4f Assembly-CSharp.dll:.LargeFileDownloaderExample
+5fdf840dd7fb2b589f2c1a9d62c172b9 Assembly-CSharp.dll:.VideoEngine
+3ee02cb1316a8b9b737b50080589b055 Assembly-CSharp.dll:.DownloadBlockingSystem
