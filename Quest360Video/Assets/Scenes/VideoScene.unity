@@ -248,6 +248,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   VideoPlayer: {fileID: 1038635811}
+  MenuName: MainMenu
   BackButton: {fileID: 1550456717}
 --- !u!1 &401426236
 GameObject:
@@ -442,7 +443,7 @@ MonoBehaviour:
   savedUp: {x: 0, y: 1, z: 0.000000015946366}
   savedRectSize: {x: 301.2944, y: 31.059}
   savedColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
-  savedTextUV0: {x: 0, y: 0.00390625}
+  savedTextUV0: {x: 0.091796875, y: 0.17382812}
   savedFill: 0
 --- !u!1001 &918184695
 PrefabInstance:

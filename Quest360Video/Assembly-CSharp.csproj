@@ -308,6 +308,8 @@
     <Compile Include="Assets\Oculus\Spatializer\scripts\ONSPSettings.cs" />
     <Compile Include="Assets\Oculus\Spatializer\scripts\ONSPVersion.cs" />
     <Compile Include="Assets\Scripts\DownloadBlockingSystem.cs" />
+    <Compile Include="Assets\Scripts\RandomPicker.cs" />
+    <Compile Include="Assets\Scripts\RandomVideoThumbnail.cs" />
     <Compile Include="Assets\Scripts\VideoEngine.cs" />
     <Compile Include="Assets\Scripts\VideoThumbnailContainer.cs" />
     <None Include="Assets\Oculus\SampleFramework\Usage\OVROverlayCanvas\Shaders\UI Prerendered Opaque.shader" />
