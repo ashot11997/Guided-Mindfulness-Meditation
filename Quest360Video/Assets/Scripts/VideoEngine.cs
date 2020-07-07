@@ -23,6 +23,7 @@ public class VideoEngine : MonoBehaviour
 
     private void Start()
     {
+
         if (Audio_Voice == null)
         {
             // this is for first project
@@ -32,12 +33,22 @@ public class VideoEngine : MonoBehaviour
         else
         {
             // this is for second project
-            string url = PlayerPrefs.GetString("VideoUrl");
-            VideoPlayer.OpenVideoFromFile(MediaPlayer.FileLocation.AbsolutePathOrURL, url);
-            StartCoroutine(PickUpRandomVoice(PlayerPrefs.GetString("VoiceUrl")));
             StartCoroutine(PickUpRandomMusic(PlayerPrefs.GetString("MusicUrl")));
+            StartCoroutine(PickUpRandomVoice(PlayerPrefs.GetString("VoiceUrl")));
+            string url = PlayerPrefs.GetString("VideoUrl");
+            VideoPlayer.m_Loop = false;
+            VideoPlayer.OpenVideoFromFile(MediaPlayer.FileLocation.AbsolutePathOrURL, url);
         }
         
+    }
+
+    void Update() {
+        if (VideoPlayer.Control.IsFinished())
+        {
+            Audio_Music.volume = 0;
+            Audio_Voice.volume = 0;
+            GoToMenu();
+        }
     }
 
     void GoToMenu() {
@@ -45,6 +56,7 @@ public class VideoEngine : MonoBehaviour
     }
 
     private IEnumerator PickUpRandomVoice(string url) {
+        Audio_Voice.volume = 1;
         WWW www = new WWW(url);
         yield return www;
 
@@ -56,8 +68,10 @@ public class VideoEngine : MonoBehaviour
         Audio_Voice.clip = audio;
         Audio_Voice.Play();
     }
+
     private IEnumerator PickUpRandomMusic(string url)
     {
+        Audio_Music.volume = 1;
         WWW www = new WWW(url);
         yield return www;
 
